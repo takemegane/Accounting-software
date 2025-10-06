@@ -20,6 +20,7 @@
 - `README.md` now surfaces setup instructions, feature overview, and documentation flow for onboarding.
 - `docs/operations-manual.md` references the new accounting roadmap for upcoming features.
 - Journal entry APIs block edits/deletes for locked periods and expose lock metadata to the UI.
+- Journal entry form now displays tax categories in Japanese and aligns with the expanded master list.
 
 ### Removed
 - Deprecated `docs/WORKLOG.md`; change history is now captured in this changelog.

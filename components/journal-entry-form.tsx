@@ -38,6 +38,14 @@ type TaxPreview = {
 
 const getTaxRate = (account?: Account) => account?.taxRate ?? 0;
 
+const fallbackTaxCategoryLabel: Record<string, string> = {
+  EXEMPT: "非課税",
+  NON_TAXABLE: "不課税",
+  OUT_OF_SCOPE: "対象外",
+  SALE_10: "課税売上(10%)",
+  PURCHASE_10: "課税仕入(10%)",
+};
+
 export function JournalEntryForm() {
   const queryClient = useQueryClient();
   const [entryDate, setEntryDate] = useState(getToday);
@@ -136,15 +144,19 @@ export function JournalEntryForm() {
         return;
       }
       if (!unique.has(account.taxCategoryId)) {
+        const fallbackName =
+          fallbackTaxCategoryLabel[account.taxCategoryCode ?? ""] ??
+          account.taxCategoryCode ??
+          account.taxCategoryId;
         unique.set(account.taxCategoryId, {
           id: account.taxCategoryId,
           code: account.taxCategoryCode ?? account.taxCategoryId.slice(0, 6),
-          name: account.taxCategoryCode ?? account.taxCategoryId,
+          name: fallbackName,
           rate: account.taxRate ?? 0,
         });
       }
     });
-    return Array.from(unique.values()).sort((a, b) => a.code.localeCompare(b.code, "ja"));
+    return Array.from(unique.values()).sort((a, b) => a.name.localeCompare(b.name, "ja"));
   }, [taxCategories, accounts]);
 
   const buildPayload = () => ({
@@ -459,11 +471,25 @@ export function JournalEntryForm() {
                 style={{ padding: "0.5rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
               >
                 <option value="">
-                  {accounts?.find((account) => account.id === line.accountId)?.taxCategoryCode ?? "選択"}
+                  {(() => {
+                    const account = accounts?.find((item) => item.id === line.accountId);
+                    if (!account?.taxCategoryId) {
+                      return "選択";
+                    }
+                    const matched = availableTaxCategories.find((category) => category.id === account.taxCategoryId);
+                    if (matched) {
+                      return matched.name;
+                    }
+                    return (
+                      fallbackTaxCategoryLabel[account.taxCategoryCode ?? ""] ??
+                      account.taxCategoryCode ??
+                      "選択"
+                    );
+                  })()}
                 </option>
                 {availableTaxCategories.map((category) => (
                   <option key={category.id} value={category.id}>
-                    {category.code} {category.name}
+                    {category.name}
                   </option>
                 ))}
               </select>
