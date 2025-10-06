@@ -8,6 +8,8 @@ type JournalEntry = {
   id: string;
   entryDate: string;
   description?: string;
+  lockedAt?: string | null;
+  lockedBy?: { id: string; clerkUserId?: string | null };
   lines: {
     id: string;
     accountName: string;
@@ -21,6 +23,7 @@ type JournalEntryDetail = {
   id: string;
   entryDate: string;
   description?: string;
+  lockedAt?: string | null;
   lines: {
     id: string;
     accountId: string;
@@ -72,6 +75,11 @@ export function TransactionsTable() {
       return response.json();
     },
     onSuccess: (detail) => {
+      if (detail.lockedAt) {
+        setActionError("締め済みの仕訳は編集できません");
+        setActionMessage(null);
+        return;
+      }
       setEditingEntry({
         id: detail.id,
         entryDate: detail.entryDate,
@@ -129,13 +137,23 @@ export function TransactionsTable() {
     },
   });
 
-  const handleEdit = (entryId: string) => {
+  const handleEdit = (entryId: string, isLocked: boolean) => {
+    if (isLocked) {
+      setActionError("締め済みの仕訳は編集できません");
+      setActionMessage(null);
+      return;
+    }
     setActionError(null);
     setActionMessage(null);
     editMutation.mutate(entryId);
   };
 
   const handleDelete = (entry: JournalEntry) => {
+    if (entry.lockedAt) {
+      setActionError("締め済みの仕訳は削除できません");
+      setActionMessage(null);
+      return;
+    }
     if (deleteMutation.isPending) {
       return;
     }
@@ -218,6 +236,7 @@ export function TransactionsTable() {
             <tbody>
               {filtered.map((entry) => {
                 const linesCount = entry.lines.length;
+                const isLocked = Boolean(entry.lockedAt);
                 return entry.lines.map((line, index) => (
                   <tr key={`${entry.id}-${line.id}`}
                     style={{
@@ -233,6 +252,22 @@ export function TransactionsTable() {
                     {index === 0 && (
                       <td rowSpan={linesCount} style={{ padding: "0.75rem", verticalAlign: "top" }}>
                         {entry.description ?? "(摘要なし)"}
+                        {isLocked ? (
+                          <span
+                            style={{
+                              display: "inline-block",
+                              marginLeft: "0.5rem",
+                              padding: "0.1rem 0.5rem",
+                              borderRadius: "999px",
+                              background: "#dbeafe",
+                              color: "#1d4ed8",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                            }}
+                          >
+                            締め済み
+                          </span>
+                        ) : null}
                       </td>
                     )}
                     <td style={{ padding: "0.75rem" }}>
@@ -250,16 +285,19 @@ export function TransactionsTable() {
                         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                           <button
                             type="button"
-                            onClick={() => handleEdit(entry.id)}
-                            disabled={editMutation.isPending || deleteMutation.isPending}
+                            onClick={() => handleEdit(entry.id, isLocked)}
+                            disabled={isLocked || editMutation.isPending || deleteMutation.isPending}
                             style={{
                               padding: "0.4rem 0.9rem",
                               borderRadius: "0.65rem",
                               border: "1px solid #2563eb",
-                              backgroundColor: "white",
-                              color: "#2563eb",
+                              backgroundColor: isLocked ? "#e2e8f0" : "white",
+                              color: isLocked ? "#94a3b8" : "#2563eb",
                               fontWeight: 600,
-                              cursor: editMutation.isPending || deleteMutation.isPending ? "not-allowed" : "pointer",
+                              cursor:
+                                isLocked || editMutation.isPending || deleteMutation.isPending
+                                  ? "not-allowed"
+                                  : "pointer",
                             }}
                           >
                             編集
@@ -267,15 +305,18 @@ export function TransactionsTable() {
                           <button
                             type="button"
                             onClick={() => handleDelete(entry)}
-                            disabled={deleteMutation.isPending || editMutation.isPending}
+                            disabled={isLocked || deleteMutation.isPending || editMutation.isPending}
                             style={{
                               padding: "0.4rem 0.9rem",
                               borderRadius: "0.65rem",
                               border: "1px solid #ef4444",
-                              backgroundColor: "white",
-                              color: "#ef4444",
+                              backgroundColor: isLocked ? "#fee2e2" : "white",
+                              color: isLocked ? "#fca5a5" : "#ef4444",
                               fontWeight: 600,
-                              cursor: deleteMutation.isPending || editMutation.isPending ? "not-allowed" : "pointer",
+                              cursor:
+                                isLocked || deleteMutation.isPending || editMutation.isPending
+                                  ? "not-allowed"
+                                  : "pointer",
                             }}
                           >
                             削除

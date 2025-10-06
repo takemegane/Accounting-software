@@ -8,6 +8,8 @@
 - Navigation item "帳簿" and dedicated books page (`app/books/page.tsx`) hosting the general ledger and journal reports.
 - Balance sheet report UI component (`components/balance-sheet-report.tsx`).
 - Operations manual consolidating setup, workflows, and change history guidance (`docs/operations-manual.md`).
+- Accounting feature roadmap covering closing, tax, AR/AP, and bank reconciliation planning (`docs/accounting-roadmap.md`).
+- Closing period management API and UI (`app/api/closing-periods/route.ts`, `components/closing-period-manager.tsx`) enabling month/year-end locks.
 
 ### Changed
 - `app/reports/page.tsx` now focuses on trial balance, balance sheet, and income statement reports only.
@@ -15,6 +17,8 @@
 - `components/transactions-table.tsx` exposes edit/delete actions that interact with the new journal entry APIs and refresh dependent queries.
 - General ledger (`components/general-ledger-report.tsx`) and journal report (`components/journal-report.tsx`) moved to the new books page.
 - `README.md` now surfaces setup instructions, feature overview, and documentation flow for onboarding.
+- `docs/operations-manual.md` references the new accounting roadmap for upcoming features.
+- Journal entry APIs block edits/deletes for locked periods and expose lock metadata to the UI.
 
 ### Removed
 - Deprecated `docs/WORKLOG.md`; change history is now captured in this changelog.

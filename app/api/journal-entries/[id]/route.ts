@@ -7,6 +7,7 @@ import {
   JournalEntryValidationError,
   prepareJournalEntryData,
 } from "@/lib/journal-entry-validation";
+import { assertDateUnlocked } from "@/lib/closing-periods";
 
 export async function GET(
   _request: Request,
@@ -20,6 +21,9 @@ export async function GET(
         include: { account: true },
         orderBy: { lineNumber: "asc" },
       },
+      lockedBy: {
+        select: { id: true, clerkUserId: true },
+      },
     },
   });
 
@@ -31,6 +35,13 @@ export async function GET(
     id: entry.id,
     entryDate: entry.entryDate,
     description: entry.description ?? undefined,
+    lockedAt: entry.lockedAt ?? undefined,
+    lockedBy: entry.lockedBy
+      ? {
+          id: entry.lockedBy.id,
+          clerkUserId: entry.lockedBy.clerkUserId,
+        }
+      : undefined,
     lines: entry.lines.map((line) => ({
       id: line.id,
       accountId: line.accountId,
@@ -59,6 +70,10 @@ export async function PATCH(
     return NextResponse.json({ message: "仕訳が見つかりません" }, { status: 404 });
   }
 
+  if (existing.lockedAt) {
+    return NextResponse.json({ message: "締め済みの仕訳は編集できません" }, { status: 409 });
+  }
+
   try {
     const { parsedDate, calculatedLines } = await prepareJournalEntryData(body, {
       id: business.id,
@@ -66,6 +81,8 @@ export async function PATCH(
       vatPayableAccountId: business.vatPayableAccountId,
       vatReceivableAccountId: business.vatReceivableAccountId,
     });
+
+    await assertDateUnlocked(business.id, parsedDate);
 
     const updated = await prisma.journalEntry.update({
       where: { id: params.id },
@@ -127,6 +144,10 @@ export async function DELETE(
 
   if (!existing) {
     return NextResponse.json({ message: "仕訳が見つかりません" }, { status: 404 });
+  }
+
+  if (existing.lockedAt) {
+    return NextResponse.json({ message: "締め済みの仕訳は削除できません" }, { status: 409 });
   }
 
   try {

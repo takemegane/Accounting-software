@@ -7,6 +7,7 @@
 - 帳簿ページに総勘定元帳・仕訳帳を集約 (`app/books/page.tsx`)
 - 試算表・損益計算書・貸借対照表 UI (`components/*-report.tsx`)
 - CSV 取込（Papaparse）と税区分付き勘定科目初期データ (`lib/csv-import.ts`, `lib/seed.ts`)
+- 月次/年次の締め管理で締め済み期間の仕訳ロック (`components/closing-period-manager.tsx`)
 
 ## 技術スタック
 - Next.js 14 (App Router) / React 18 / TypeScript
@@ -49,6 +50,7 @@ Clerk を利用する場合は `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` と `CLERK_SE
 - 運用マニュアルと作成履歴は `docs/operations-manual.md` に集約しています。新しい意思決定や大きな変更を行った際は必ず同ファイルを更新してください。
 - 実装単位の差分は `CHANGELOG.md` に追記します（Added / Changed / Removed 形式）。
 - 追加資料（アーキテクチャ、データモデル案など）は `docs/` 配下に保管し、マニュアルから参照します。
+- 直近の優先開発項目は `docs/accounting-roadmap.md` に要件をまとめています。
 
 ## 今後の予定（抜粋）
 - Prisma スキーマ拡張と Neon PostgreSQL への移行検討

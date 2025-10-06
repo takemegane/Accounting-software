@@ -70,6 +70,7 @@
 
 ### 事業設定 (`app/settings`, `components/business-settings.tsx`)
 - 会計年度や税設定を変更。税区分・勘定科目の初期化は `lib/seed.ts` を利用。
+- 締め処理 (`components/closing-period-manager.tsx`) で月次・年次のロックを管理し、仕訳編集を制御。
 
 ## 7. API エンドポイント概要 (`app/api`)
 - `journal-entries/` : GET/POST で直近仕訳取得・登録。
@@ -110,6 +111,7 @@
 - `docs/import-and-entry.md` : CSV 取込/仕訳連携の検討。
 - `docs/ocr-options.md` : OCR/AI 連携候補の比較メモ。
 - `docs/troubleshooting.md` : よくある問題と対処（随時更新推奨）。
+- `docs/accounting-roadmap.md` : 優先会計機能（締め処理・消費税・債権債務・銀行照合）の要件整理。
 - 今後も補助資料は `docs/` 配下にまとめ、本書から参照先としてリンク記載する。
 
 ## 12. 引き継ぎチェックリスト

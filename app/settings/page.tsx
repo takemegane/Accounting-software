@@ -2,6 +2,7 @@ import { AppShell } from "@/components/app-shell";
 import { BusinessSettings } from "@/components/business-settings";
 import { AccountBalanceForm } from "@/components/account-balance-form";
 import { AccountManager } from "@/components/account-manager";
+import { ClosingPeriodManager } from "@/components/closing-period-manager";
 
 export default function SettingsPage() {
   return (
@@ -18,6 +19,8 @@ export default function SettingsPage() {
       </section>
 
       <AccountManager />
+
+      <ClosingPeriodManager />
 
       <section
         style={{

@@ -22,6 +22,7 @@ model Business {
   transactions        Transaction[]
   memberships         BusinessMembership[]
   activeUsers         UserProfile[]   @relation("ActiveBusiness")
+  closingPeriods      ClosingPeriod[]
 }
 
 model Account {
@@ -61,10 +62,13 @@ model JournalEntry {
   entryDate   DateTime
   description String?
   status      String            @default("POSTED")
+  lockedAt    DateTime?
+  lockedById  String?
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   lines       JournalEntryLine[]
   transactions Transaction[]
+  lockedBy    UserProfile?       @relation("JournalEntry_lockedBy", fields: [lockedById], references: [id])
 }
 
 model JournalEntryLine {
@@ -109,6 +113,9 @@ model UserProfile {
   activeBusinessId  String?
   activeBusiness    Business?            @relation("ActiveBusiness", fields: [activeBusinessId], references: [id])
   memberships       BusinessMembership[]
+  journalEntriesLocked JournalEntry[]    @relation("JournalEntry_lockedBy")
+  closingPeriodsClosed ClosingPeriod[]   @relation("ClosingPeriod_closedBy")
+  closingPeriodsReopened ClosingPeriod[] @relation("ClosingPeriod_reopenedBy")
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
 }
@@ -137,4 +144,26 @@ model AccountBalance {
   updatedAt  DateTime @updatedAt
 
   @@unique([businessId, accountId])
+}
+
+model ClosingPeriod {
+  id           String       @id @default(cuid())
+  business     Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId   String
+  periodType   String
+  startDate    DateTime
+  endDate      DateTime
+  status       String       @default("open")
+  closedAt     DateTime?
+  closedById   String?
+  reopenedAt   DateTime?
+  reopenedById String?
+  notes        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  closedBy     UserProfile? @relation("ClosingPeriod_closedBy", fields: [closedById], references: [id])
+  reopenedBy   UserProfile? @relation("ClosingPeriod_reopenedBy", fields: [reopenedById], references: [id])
+
+  @@index([businessId, periodType, startDate, endDate])
 }

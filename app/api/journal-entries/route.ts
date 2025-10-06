@@ -6,6 +6,7 @@ import {
   JournalEntryInput,
   prepareJournalEntryData,
 } from "@/lib/journal-entry-validation";
+import { assertDateUnlocked } from "@/lib/closing-periods";
 
 export async function GET() {
   const { business } = await getBusinessContext();
@@ -17,6 +18,9 @@ export async function GET() {
         include: { account: true },
         orderBy: { lineNumber: "asc" },
       },
+      lockedBy: {
+        select: { id: true, clerkUserId: true },
+      },
     },
     orderBy: { entryDate: "desc" },
     take: 20,
@@ -27,6 +31,13 @@ export async function GET() {
       id: entry.id,
       entryDate: entry.entryDate,
       description: entry.description,
+      lockedAt: entry.lockedAt ?? undefined,
+      lockedBy: entry.lockedBy
+        ? {
+            id: entry.lockedBy.id,
+            clerkUserId: entry.lockedBy.clerkUserId,
+          }
+        : undefined,
       lines: entry.lines.map((line) => ({
         id: line.id,
         accountName: line.account.name,
@@ -50,6 +61,8 @@ export async function POST(request: Request) {
       vatPayableAccountId: business.vatPayableAccountId,
       vatReceivableAccountId: business.vatReceivableAccountId,
     });
+
+    await assertDateUnlocked(business.id, parsedDate);
 
     const entry = await prisma.journalEntry.create({
       data: {

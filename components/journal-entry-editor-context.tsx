@@ -16,6 +16,7 @@ export type JournalEntryDraft = {
   entryDate: string;
   description?: string;
   lines: JournalEntryDraftLine[];
+  lockedAt?: string | null;
 };
 
 type ContextValue = {
