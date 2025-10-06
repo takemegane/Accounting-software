@@ -69,6 +69,14 @@ export function AccountManager() {
     retry: false,
   });
 
+  const taxCategoryLabelMap = useMemo(() => {
+    const map = new Map<string, string>();
+    (categoriesQuery.data ?? []).forEach((category) => {
+      map.set(category.id, category.name);
+    });
+    return map;
+  }, [categoriesQuery.data]);
+
   const sortedAccounts = useMemo(() => {
     const items = accountsQuery.data ?? [];
     return [...items].sort((a, b) => a.code.localeCompare(b.code, "ja"));
@@ -566,7 +574,9 @@ export function AccountManager() {
                     <td style={{ padding: "0.75rem", fontWeight: 600 }}>{account.code}</td>
                     <td style={{ padding: "0.75rem" }}>{account.name}</td>
                     <td style={{ padding: "0.75rem" }}>{ACCOUNT_TYPES.find((item) => item.value === account.type)?.label ?? account.type}</td>
-                    <td style={{ padding: "0.75rem" }}>{account.taxCategoryCode ?? "-"}</td>
+                    <td style={{ padding: "0.75rem" }}>
+                      {taxCategoryLabelMap.get(account.taxCategoryId) ?? account.taxCategoryCode ?? "-"}
+                    </td>
                     <td style={{ padding: "0.75rem" }}>
                       <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                         <button
