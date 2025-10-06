@@ -17,7 +17,7 @@
 - Next.js 14 (App Router) + React 18 + TypeScript。
 - 状態管理/データ取得: TanStack Query (`components/react-query-provider.tsx`)。
 - 認証: Clerk（`components/safe-clerk.tsx` で未設定環境でも動作するフェールセーフを実装）。
-- データベース: Prisma + SQLite (開発用 `prisma/prisma/dev.db`)。将来的に Neon PostgreSQL を想定（`docs/architecture.md` 参照）。
+- データベース: Prisma + SQLite (開発用 `prisma/dev.db`)。将来的に Neon PostgreSQL を想定（`docs/architecture.md` 参照）。
 - その他ライブラリ: Papaparse（CSV 取込）、PDFKit（帳票生成下準備）、next-pwa（PWA 対応）。
 - Node.js 18 以上を推奨。
 
@@ -34,7 +34,7 @@
 5. DB スキーマ適用: `npx prisma migrate dev --name init` もしくは `npx prisma db push`
 
 ### 環境変数
-- `DATABASE_URL="file:./prisma/dev.db"` を `.env` or `.env.local` に設定。現在リポジトリには `prisma/prisma/dev.db` を配置しているため、必要に応じて `DATABASE_URL="file:./prisma/prisma/dev.db"` とするか、ファイルを `prisma/dev.db` に移動してください。
+- `DATABASE_URL="file:./prisma/dev.db"` を `.env` or `.env.local` に設定。リポジトリには `prisma/dev.db` を同梱済みです。ターミナルの現ディレクトリにスペースが含まれている場合、Prisma CLI コマンド実行時に `DATABASE_URL="file:$(pwd)/prisma/dev.db" npx prisma ...` のように絶対パスで上書きすると失敗を避けられます。
 - Clerk を利用する場合は以下を設定し、未設定時は `SafeClerkProvider` がスタブ UI を表示します。
   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
   - `CLERK_SECRET_KEY`

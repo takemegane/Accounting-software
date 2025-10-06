@@ -11,7 +11,7 @@
 ## 技術スタック
 - Next.js 14 (App Router) / React 18 / TypeScript
 - TanStack Query によるデータ取得 (`components/react-query-provider.tsx`)
-- Prisma + SQLite（開発用 DB は `prisma/prisma/dev.db`）
+- Prisma + SQLite（開発用 DB は `prisma/dev.db`）
 - Clerk 認証ラッパー (`components/safe-clerk.tsx`) と next-pwa による PWA 対応
 
 ## セットアップ手順
@@ -26,7 +26,7 @@ npm run clean        # 既存の .next キャッシュがある場合
 npm run dev          # http://localhost:3000
 ```
 
-Prisma スキーマ変更後は `npx prisma generate` を実行してください。ローカル DB を利用する場合は `.env` / `.env.local` に `DATABASE_URL="file:./prisma/dev.db"` を設定するか、同梱の `prisma/prisma/dev.db` を参照するために `DATABASE_URL="file:./prisma/prisma/dev.db"` としてください。
+Prisma スキーマ変更後は `npx prisma generate` を実行してください。ローカル DB を利用する場合は `.env` / `.env.local` に `DATABASE_URL="file:./prisma/dev.db"` を設定してください。プロジェクトパス（`pwd`）にスペースが含まれる環境で Prisma CLI が失敗する場合は、コマンド実行時のみ `DATABASE_URL="file:$(pwd)/prisma/dev.db" npx prisma ...` のように絶対パスで上書きしてください。
 
 Clerk を利用する場合は `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` と `CLERK_SECRET_KEY` を設定します。未設定でも `SafeClerkProvider` により開発は継続できます。
 
