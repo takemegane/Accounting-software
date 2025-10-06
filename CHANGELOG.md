@@ -10,6 +10,7 @@
 - Operations manual consolidating setup, workflows, and change history guidance (`docs/operations-manual.md`).
 - Accounting feature roadmap covering closing, tax, AR/AP, and bank reconciliation planning (`docs/accounting-roadmap.md`).
 - Closing period management API and UI (`app/api/closing-periods/route.ts`, `components/closing-period-manager.tsx`) enabling month/year-end locks.
+- Additional tax categories for `不課税` and `対象外`, including seeding/upsert support (`lib/seed.ts`).
 
 ### Changed
 - `app/reports/page.tsx` now focuses on trial balance, balance sheet, and income statement reports only.

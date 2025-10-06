@@ -8,6 +8,18 @@ const defaultTaxCategories = [
     description: "非課税取引用",
   },
   {
+    code: "NON_TAXABLE",
+    name: "不課税",
+    rate: 0,
+    description: "不課税取引用（給与・寄付金など）",
+  },
+  {
+    code: "OUT_OF_SCOPE",
+    name: "対象外",
+    rate: 0,
+    description: "消費税の課税対象外取引用",
+  },
+  {
     code: "SALE_10",
     name: "課税売上(10%)",
     rate: 0.1,
@@ -67,18 +79,21 @@ const defaultAccounts = [
 ];
 
 export async function ensureBusinessSeed(businessId: string) {
-  const taxCategoryCount = await prisma.taxCategory.count();
-  if (taxCategoryCount === 0) {
-    for (const category of defaultTaxCategories) {
-      await prisma.taxCategory.create({
-        data: {
-          code: category.code,
-          name: category.name,
-          rate: category.rate,
-          description: category.description,
-        },
-      });
-    }
+  for (const category of defaultTaxCategories) {
+    await prisma.taxCategory.upsert({
+      where: { code: category.code },
+      update: {
+        name: category.name,
+        rate: category.rate,
+        description: category.description,
+      },
+      create: {
+        code: category.code,
+        name: category.name,
+        rate: category.rate,
+        description: category.description,
+      },
+    });
   }
 
   let business = await prisma.business.findUnique({ where: { id: businessId } });
