@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id                  String          @id @default(cuid())
+  name                String
+  taxPreference       String          @default("TAX_INCLUSIVE")
+  vatPayableAccountId String?
+  vatReceivableAccountId String?
+  fiscalYearStartMonth Int             @default(1)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  accounts            Account[]
+  journalEntries      JournalEntry[]
+  accountBalances     AccountBalance[]
+  transactions        Transaction[]
+  memberships         BusinessMembership[]
+  activeUsers         UserProfile[]   @relation("ActiveBusiness")
+}
+
+model Account {
+  id            String             @id @default(cuid())
+  business      Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId    String
+  code          String
+  name          String
+  type          String
+  taxCategory   TaxCategory        @relation(fields: [taxCategoryId], references: [id])
+  taxCategoryId String
+  isActive      Boolean            @default(true)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  lines         JournalEntryLine[]
+  balances      AccountBalance[]
+
+  @@unique([businessId, code])
+}
+
+model TaxCategory {
+  id                 String             @id @default(cuid())
+  code               String             @unique
+  name               String
+  rate               Float
+  description        String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  accounts           Account[]
+  journalEntryLines  JournalEntryLine[]
+}
+
+model JournalEntry {
+  id          String             @id @default(cuid())
+  business    Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId  String
+  entryDate   DateTime
+  description String?
+  status      String            @default("POSTED")
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  lines       JournalEntryLine[]
+  transactions Transaction[]
+}
+
+model JournalEntryLine {
+  id             String        @id @default(cuid())
+  journalEntry   JournalEntry  @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  journalEntryId String
+  lineNumber     Int
+  account        Account       @relation(fields: [accountId], references: [id])
+  accountId      String
+  debit          Int            @default(0)
+  credit         Int            @default(0)
+  taxCategory    TaxCategory?   @relation(fields: [taxCategoryId], references: [id])
+  taxCategoryId  String?
+  memo           String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([journalEntryId, lineNumber])
+}
+
+model Transaction {
+  id             String    @id @default(cuid())
+  business       Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId     String
+  source         String    @default("csv")
+  sourceReference String?
+  transactionDate DateTime
+  amount         Int
+  description    String?
+  counterparty   String?
+  status         String    @default("pending")
+  rawLine        String?
+  journalEntry   JournalEntry? @relation(fields: [journalEntryId], references: [id], onDelete: SetNull)
+  journalEntryId String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model UserProfile {
+  id                String               @id @default(cuid())
+  clerkUserId       String               @unique
+  activeBusinessId  String?
+  activeBusiness    Business?            @relation("ActiveBusiness", fields: [activeBusinessId], references: [id])
+  memberships       BusinessMembership[]
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+}
+
+model BusinessMembership {
+  id          String      @id @default(cuid())
+  business    Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId  String
+  user        UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  role        String      @default("owner")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@unique([businessId, userId])
+}
+
+model AccountBalance {
+  id         String   @id @default(cuid())
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId String
+  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId  String
+  amount     Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([businessId, accountId])
+}
