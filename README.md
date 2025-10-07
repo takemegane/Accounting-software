@@ -2,6 +2,17 @@
 
 個人事業主向けの軽量会計アプリのプロトタイプです。CSV 取込と手入力を組み合わせた仕訳管理、帳簿・主要レポート（試算表 / 貸借対照表 / 損益計算書）の参照を想定しています。
 
+## ⚠️ 最新の重要な変更（2025-10-07）
+
+**消費税計算ロジックの重大なバグを修正しました。**
+
+- **影響:** 税抜経理モードで税込金額から消費税を逆算する際、税抜金額と消費税の内訳が不正確でした
+- **修正内容:** `lib/tax-helpers.ts` の計算式を修正（詳細は `CHANGELOG.md` を参照）
+- **データベース:** 修正前の不整合データは削除済み（データベースをリセット）
+- **今後:** 新規作成されるデータは全て正しい計算ロジックで処理されます
+
+詳細は **[CHANGELOG.md](./CHANGELOG.md)** を必ず確認してください。
+
 ## 主な機能
 - 仕訳 CRUD と取引一覧 (`app/transactions`, `components/journal-entry-form.tsx`, `components/transactions-table.tsx`)
 - 帳簿ページに総勘定元帳・仕訳帳を集約 (`app/books/page.tsx`)
@@ -52,9 +63,20 @@ Clerk を利用する場合は `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` と `CLERK_SE
 - 追加資料（アーキテクチャ、データモデル案など）は `docs/` 配下に保管し、マニュアルから参照します。
 - 直近の優先開発項目は `docs/accounting-roadmap.md` に要件をまとめています。
 
+## 引き継ぎ時の推奨読む順番
+
+チームへの引き継ぎ時は以下の順番でドキュメントを確認してください：
+
+1. **README.md（本ファイル）** - プロジェクト概要と最新の重要な変更
+2. **[CHANGELOG.md](./CHANGELOG.md)** - 最新の修正内容と技術的詳細
+3. **[docs/operations-manual.md](./docs/operations-manual.md)** - 運用マニュアルと設計判断
+4. **[docs/accounting-roadmap.md](./docs/accounting-roadmap.md)** - 今後の開発予定
+
+### 特に重要
+- **消費税計算の修正（2025-10-07）** については必ず `CHANGELOG.md` を確認してください
+- データベースはリセット済みなので、既存データは存在しません
+
 ## 今後の予定（抜粋）
 - Prisma スキーマ拡張と Neon PostgreSQL への移行検討
 - 仕訳検証・レポート計算のテスト整備
 - Clerk 認証の本番運用フロー、OCR/外部連携の PoC
-
-チームへの引き継ぎ時は README → `docs/operations-manual.md` → `CHANGELOG.md` の順に確認する運用を推奨します。

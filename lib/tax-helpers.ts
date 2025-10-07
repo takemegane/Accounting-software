@@ -162,8 +162,8 @@ export async function applyTaxLogic(
       if (isDebitPositive) {
         // 借方: 税込金額から消費税を計算し、本体価格を逆算
         const taxInclusiveAmount = line.debit;
-        const taxAmount = Math.floor(taxInclusiveAmount * effectiveRate / (1 + effectiveRate));
-        const taxExclusiveAmount = taxInclusiveAmount - taxAmount;
+        const taxExclusiveAmount = Math.round(taxInclusiveAmount / (1 + effectiveRate));
+        const taxAmount = taxInclusiveAmount - taxExclusiveAmount;
 
         normalizedLines.push({
           accountId: line.accountId,
@@ -177,8 +177,8 @@ export async function applyTaxLogic(
       } else if (isCreditPositive) {
         // 貸方: 税込金額から消費税を計算し、本体価格を逆算
         const taxInclusiveAmount = line.credit;
-        const taxAmount = Math.floor(taxInclusiveAmount * effectiveRate / (1 + effectiveRate));
-        const taxExclusiveAmount = taxInclusiveAmount - taxAmount;
+        const taxExclusiveAmount = Math.round(taxInclusiveAmount / (1 + effectiveRate));
+        const taxAmount = taxInclusiveAmount - taxExclusiveAmount;
 
         normalizedLines.push({
           accountId: line.accountId,

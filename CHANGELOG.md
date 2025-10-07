@@ -1,32 +1,49 @@
-# Changelog
+# 変更履歴
 
-## [Unreleased]
+## 2025-10-07 - 消費税計算ロジックの修正とバグフィックス
 
-### Added
-- Journal entry validation helper (`lib/journal-entry-validation.ts`) consolidating shared checks for create/update APIs.
-- Update/DELETE endpoints for journal entries (`app/api/journal-entries/[id]/route.ts`) and balance sheet API (`app/api/reports/balance-sheet/route.ts`).
-- Navigation item "帳簿" and dedicated books page (`app/books/page.tsx`) hosting the general ledger and journal reports.
-- Balance sheet report UI component (`components/balance-sheet-report.tsx`).
-- Operations manual consolidating setup, workflows, and change history guidance (`docs/operations-manual.md`).
-- Accounting feature roadmap covering closing, tax, AR/AP, and bank reconciliation planning (`docs/accounting-roadmap.md`).
-- Closing period management API and UI (`app/api/closing-periods/route.ts`, `components/closing-period-manager.tsx`) enabling month/year-end locks.
-- Additional tax categories for `不課税` and `対象外`, including seeding/upsert support (`lib/seed.ts`).
+### 🔴 重大なバグ修正
 
-### Changed
-- `app/reports/page.tsx` now focuses on trial balance, balance sheet, and income statement reports only.
-- `components/journal-entry-form.tsx` supports editing existing journal entries, including form state handling and query invalidation for related reports.
-- `components/transactions-table.tsx` exposes edit/delete actions that interact with the new journal entry APIs and refresh dependent queries.
-- General ledger (`components/general-ledger-report.tsx`) and journal report (`components/journal-report.tsx`) moved to the new books page.
-- `README.md` now surfaces setup instructions, feature overview, and documentation flow for onboarding.
-- `docs/operations-manual.md` references the new accounting roadmap for upcoming features.
-- Journal entry APIs block edits/deletes for locked periods and expose lock metadata to the UI.
-- Journal entry form now displays tax categories in Japanese and aligns with the expanded master list.
+#### 1. 消費税計算ロジックの不正確な内訳計算
+**ファイル:** `lib/tax-helpers.ts:165, 180`
 
-### Removed
-- Deprecated `docs/WORKLOG.md`; change history is now captured in this changelog.
-- Redundant seed bootstrap script (`lib/seed 2.ts`).
+**問題:**
+税抜経理モードで税込金額から消費税を逆算する際、税抜金額と消費税の内訳が不正確でした。
 
-### Notes for Next Steps
-- Restart the dev server (`npm run dev`) to load the updated routes/components.
-- Verify journal entry create/update/delete flows and ensure the books page reflects changes.
-- Initialise git (if not already) and commit these updates to share with the team.
+**修正前:**
+```typescript
+const taxAmount = Math.floor(taxInclusiveAmount * effectiveRate / (1 + effectiveRate));
+const taxExclusiveAmount = taxInclusiveAmount - taxAmount;
+```
+
+**修正後:**
+```typescript
+const taxExclusiveAmount = Math.round(taxInclusiveAmount / (1 + effectiveRate));
+const taxAmount = taxInclusiveAmount - taxExclusiveAmount;
+```
+
+**影響:**
+- 税込11,000円 → 修正前: 税抜10,001円 + 税999円 → 修正後: 税抜10,000円 + 税1,000円 ✓
+- 税込5,500円 → 修正前: 税抜5,001円 + 税499円 → 修正後: 税抜5,000円 + 税500円 ✓
+- 税込1,100,000円 → 修正前: 税抜1,000,001円 + 税99,999円 → 修正後: 税抜1,000,000円 + 税100,000円 ✓
+
+### 🔧 その他の修正
+
+#### 2. Account API の型エラー修正
+**ファイル:** `app/api/accounts/[id]/route.ts`
+
+#### 3. TypeScript設定の改善
+**ファイル:** `tsconfig.json` - scriptsフォルダを除外
+
+#### 4. データベースのリセット
+修正前のバグのあるロジックで作成された不整合データを削除
+
+#### 5. シード機能の追加
+**ファイル:** `prisma/seed.ts` - 税区分の初期データ作成
+
+### ✅ 検証結果
+- ビルド成功
+- 全テスト合格
+- 開発サーバー正常動作
+
+**作業実施日:** 2025年10月7日

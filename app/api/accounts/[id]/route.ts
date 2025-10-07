@@ -39,7 +39,12 @@ export async function PATCH(
     return NextResponse.json({ message: "更新内容を確認してください" }, { status: 400 });
   }
 
-  const data: AccountPatchBody = {};
+  const data: {
+    code?: string;
+    name?: string;
+    type?: string;
+    taxCategoryId?: string;
+  } = {};
 
   if (body.code !== undefined) {
     const code = body.code.trim();
@@ -79,7 +84,7 @@ export async function PATCH(
   }
 
   if (body.taxCategoryId !== undefined) {
-    if (!body.taxCategoryId) {
+    if (body.taxCategoryId === null || !body.taxCategoryId) {
       return NextResponse.json({ message: "税区分は必須です" }, { status: 400 });
     }
 
