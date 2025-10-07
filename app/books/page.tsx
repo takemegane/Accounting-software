@@ -1,6 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { GeneralLedgerReport } from "@/components/general-ledger-report";
 import { JournalReport } from "@/components/journal-report";
+import { JournalEntryEditorProvider } from "@/components/journal-entry-editor-context";
 
 export default function BooksPage() {
   return (
@@ -8,8 +9,10 @@ export default function BooksPage() {
       title="帳簿"
       description="総勘定元帳と仕訳帳を参照できます。"
     >
-      <GeneralLedgerReport />
-      <JournalReport />
+      <JournalEntryEditorProvider>
+        <GeneralLedgerReport />
+        <JournalReport />
+      </JournalEntryEditorProvider>
     </AppShell>
   );
 }
