@@ -95,9 +95,14 @@ export function TransactionsTable() {
       });
       setActionMessage("仕訳を編集フォームに読み込みました");
       setActionError(null);
-      if (typeof window !== "undefined") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
+      setTimeout(() => {
+        const editForm = document.getElementById("edit-form");
+        if (editForm) {
+          editForm.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }, 100);
     },
     onError: (error) => {
       setActionError(error.message || "仕訳の取得に失敗しました");
