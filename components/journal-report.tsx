@@ -79,7 +79,15 @@ export function JournalReport() {
       }
       const entry = await response.json();
       setEditingEntry(entry);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      // 編集フォームが表示されるまで少し待ってからスクロール
+      setTimeout(() => {
+        const editForm = document.getElementById("edit-form");
+        if (editForm) {
+          editForm.scrollIntoView({ behavior: "smooth", block: "start" });
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }, 100);
     } catch (err) {
       setError(err instanceof Error ? err.message : "仕訳の取得に失敗しました");
     }
