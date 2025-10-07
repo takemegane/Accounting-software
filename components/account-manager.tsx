@@ -82,6 +82,19 @@ export function AccountManager() {
     return [...items].sort((a, b) => a.code.localeCompare(b.code, "ja"));
   }, [accountsQuery.data]);
 
+  const accountsByType = useMemo(() => {
+    const grouped = new Map<string, Account[]>();
+    ACCOUNT_TYPES.forEach((type) => {
+      grouped.set(type.value, []);
+    });
+    sortedAccounts.forEach((account) => {
+      const existing = grouped.get(account.type) ?? [];
+      existing.push(account);
+      grouped.set(account.type, existing);
+    });
+    return grouped;
+  }, [sortedAccounts]);
+
   const createMutation = useMutation({
     mutationFn: async () => {
       const payload = {
@@ -551,72 +564,84 @@ export function AccountManager() {
         {!isLoading && sortedAccounts.length === 0 && <p>まだ勘定科目が登録されていません。</p>}
 
         {!isLoading && sortedAccounts.length > 0 && (
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                minWidth: "640px",
-              }}
-            >
-              <thead>
-                <tr style={{ textAlign: "left", color: "#475569", fontSize: "0.85rem" }}>
-                  <th style={{ padding: "0.5rem" }}>コード</th>
-                  <th style={{ padding: "0.5rem" }}>名称</th>
-                  <th style={{ padding: "0.5rem" }}>区分</th>
-                  <th style={{ padding: "0.5rem" }}>税区分</th>
-                  <th style={{ padding: "0.5rem" }}>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedAccounts.map((account) => (
-                  <tr key={account.id} style={{ borderTop: "1px solid #e2e8f0" }}>
-                    <td style={{ padding: "0.75rem", fontWeight: 600 }}>{account.code}</td>
-                    <td style={{ padding: "0.75rem" }}>{account.name}</td>
-                    <td style={{ padding: "0.75rem" }}>{ACCOUNT_TYPES.find((item) => item.value === account.type)?.label ?? account.type}</td>
-                    <td style={{ padding: "0.75rem" }}>
-                      {taxCategoryLabelMap.get(account.taxCategoryId) ?? account.taxCategoryCode ?? "-"}
-                    </td>
-                    <td style={{ padding: "0.75rem" }}>
-                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                        <button
-                          type="button"
-                          onClick={() => setEditingAccount(account)}
-                          style={{
-                            padding: "0.4rem 0.9rem",
-                            borderRadius: "0.65rem",
-                            border: "1px solid #2563eb",
-                            backgroundColor: "white",
-                            color: "#2563eb",
-                            fontWeight: 600,
-                            cursor: updateMutation.isPending ? "not-allowed" : "pointer",
-                          }}
-                          disabled={updateMutation.isPending}
-                        >
-                          編集
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(account)}
-                          style={{
-                            padding: "0.4rem 0.9rem",
-                            borderRadius: "0.65rem",
-                            border: "1px solid #ef4444",
-                            backgroundColor: "white",
-                            color: "#ef4444",
-                            fontWeight: 600,
-                            cursor: deleteMutation.isPending ? "not-allowed" : "pointer",
-                          }}
-                          disabled={deleteMutation.isPending}
-                        >
-                          削除
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div style={{ display: "grid", gap: "2rem" }}>
+            {ACCOUNT_TYPES.map((typeInfo) => {
+              const accounts = accountsByType.get(typeInfo.value) ?? [];
+              if (accounts.length === 0) return null;
+
+              return (
+                <div key={typeInfo.value}>
+                  <h3 style={{ fontSize: "1.1rem", marginBottom: "0.75rem", color: "#1f2937", borderBottom: "2px solid #e5e7eb", paddingBottom: "0.5rem" }}>
+                    {typeInfo.label}
+                  </h3>
+                  <div style={{ overflowX: "auto" }}>
+                    <table
+                      style={{
+                        width: "100%",
+                        borderCollapse: "collapse",
+                        minWidth: "640px",
+                      }}
+                    >
+                      <thead>
+                        <tr style={{ textAlign: "left", color: "#475569", fontSize: "0.85rem", background: "#f8fafc" }}>
+                          <th style={{ padding: "0.5rem" }}>コード</th>
+                          <th style={{ padding: "0.5rem" }}>名称</th>
+                          <th style={{ padding: "0.5rem" }}>税区分</th>
+                          <th style={{ padding: "0.5rem" }}>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {accounts.map((account) => (
+                          <tr key={account.id} style={{ borderTop: "1px solid #e2e8f0" }}>
+                            <td style={{ padding: "0.75rem", fontWeight: 600 }}>{account.code}</td>
+                            <td style={{ padding: "0.75rem" }}>{account.name}</td>
+                            <td style={{ padding: "0.75rem" }}>
+                              {taxCategoryLabelMap.get(account.taxCategoryId) ?? account.taxCategoryCode ?? "-"}
+                            </td>
+                            <td style={{ padding: "0.75rem" }}>
+                              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => setEditingAccount(account)}
+                                  style={{
+                                    padding: "0.4rem 0.9rem",
+                                    borderRadius: "0.65rem",
+                                    border: "1px solid #2563eb",
+                                    backgroundColor: "white",
+                                    color: "#2563eb",
+                                    fontWeight: 600,
+                                    cursor: updateMutation.isPending ? "not-allowed" : "pointer",
+                                  }}
+                                  disabled={updateMutation.isPending}
+                                >
+                                  編集
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDelete(account)}
+                                  style={{
+                                    padding: "0.4rem 0.9rem",
+                                    borderRadius: "0.65rem",
+                                    border: "1px solid #ef4444",
+                                    backgroundColor: "white",
+                                    color: "#ef4444",
+                                    fontWeight: 600,
+                                    cursor: deleteMutation.isPending ? "not-allowed" : "pointer",
+                                  }}
+                                  disabled={deleteMutation.isPending}
+                                >
+                                  削除
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </section>
