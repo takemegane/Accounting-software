@@ -67,10 +67,59 @@ export function CsvImporter() {
       }}
     >
       <div>
-        <h2 style={{ fontSize: "1.4rem", marginBottom: "0.5rem" }}>CSVインポート</h2>
-        <p style={{ margin: 0, color: "#64748b", lineHeight: 1.6 }}>
-          銀行やクレジットカードの明細CSVを取り込み、仕訳作成前の取引候補として保存します。重複判定やマッピングは今後追加予定です。
-        </p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+          <div>
+            <h2 style={{ fontSize: "1.4rem", marginBottom: "0.5rem" }}>CSVインポート</h2>
+            <p style={{ margin: 0, color: "#64748b", lineHeight: 1.6 }}>
+              銀行やクレジットカードの明細CSVを取り込み、仕訳作成前の取引候補として保存します。
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+            <a
+              href="/sample-transactions.csv"
+              download
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "0.5rem",
+                border: "1px solid #2563eb",
+                backgroundColor: "white",
+                color: "#2563eb",
+                fontWeight: 600,
+                fontSize: "0.85rem",
+                textDecoration: "none",
+                display: "inline-block",
+              }}
+            >
+              サンプル①をダウンロード
+            </a>
+            <a
+              href="/sample-bank-statement.csv"
+              download
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "0.5rem",
+                border: "1px solid #2563eb",
+                backgroundColor: "white",
+                color: "#2563eb",
+                fontWeight: 600,
+                fontSize: "0.85rem",
+                textDecoration: "none",
+                display: "inline-block",
+              }}
+            >
+              サンプル②をダウンロード
+            </a>
+          </div>
+        </div>
+        <div style={{ marginTop: "1rem", padding: "1rem", background: "#f8fafc", borderRadius: "0.5rem", fontSize: "0.85rem", color: "#475569" }}>
+          <p style={{ margin: "0 0 0.5rem", fontWeight: 600 }}>対応する列名（自動認識）:</p>
+          <ul style={{ margin: 0, paddingLeft: "1.5rem", lineHeight: 1.7 }}>
+            <li><strong>日付:</strong> date, transaction_date, 日付, 取引日, 利用日, 精算日</li>
+            <li><strong>金額:</strong> amount, 金額, 利用金額（または「入金」と「出金」の組み合わせ）</li>
+            <li><strong>内容:</strong> description, details, memo, 内容, 摘要, 備考</li>
+            <li><strong>相手先:</strong> counterparty, payee, 相手先, 支払先, 利用店名</li>
+          </ul>
+        </div>
       </div>
 
       <div
