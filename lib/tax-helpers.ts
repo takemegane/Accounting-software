@@ -31,10 +31,27 @@ export async function applyTaxLogic(
   },
   context?: TaxContext
 ): Promise<CalculatedLine[]> {
+  // 税込経理の場合は入力をそのまま使用
   if (options.taxPreference !== "TAX_EXCLUSIVE") {
-    return lines.map((line) => ({ ...line }));
+    return lines.map((line) => {
+      const defaults = context?.accountDefaults?.get(line.accountId);
+      const hasExplicitSelection =
+        line.taxCategoryId !== undefined && line.taxCategoryId !== null && line.taxCategoryId !== "";
+      const selectedTaxCategoryId = hasExplicitSelection
+        ? (line.taxCategoryId as string | null)
+        : defaults?.taxCategoryId ?? null;
+
+      return {
+        accountId: line.accountId,
+        debit: line.debit,
+        credit: line.credit,
+        memo: line.memo,
+        taxCategoryId: selectedTaxCategoryId,
+      };
+    });
   }
 
+  // 税抜経理の場合: 税込金額から税抜と消費税を分離
   const vatPayableId = options.vatPayableAccountId;
   const vatReceivableId = options.vatReceivableAccountId;
 
@@ -58,7 +75,14 @@ export async function applyTaxLogic(
   }
 
   if (!vatPayable || !vatReceivable) {
-    return lines.map((line) => ({ ...line }));
+    // 消費税勘定が見つからない場合は入力をそのまま使用
+    return lines.map((line) => ({
+      accountId: line.accountId,
+      debit: line.debit,
+      credit: line.credit,
+      memo: line.memo,
+      taxCategoryId: line.taxCategoryId,
+    }));
   }
 
   let accountDefaults = context?.accountDefaults;
@@ -111,7 +135,8 @@ export async function applyTaxLogic(
   }
 
   const normalizedLines: CalculatedLine[] = [];
-  const additional: CalculatedLine[] = [];
+  let totalDebitTax = 0;
+  let totalCreditTax = 0;
 
   for (const line of lines) {
     const defaults = accountDefaults?.get(line.accountId);
@@ -129,50 +154,84 @@ export async function applyTaxLogic(
       effectiveRate = defaults?.rate ?? 0;
     }
 
-    const normalizedLine: CalculatedLine = {
-      accountId: line.accountId,
-      debit: line.debit,
-      credit: line.credit,
-      memo: line.memo,
-      taxCategoryId: selectedTaxCategoryId,
-    };
+    // 税率がある場合は税込金額から税抜と消費税を分離
+    if (effectiveRate > 0) {
+      const isDebitPositive = line.debit > 0 && line.credit === 0;
+      const isCreditPositive = line.credit > 0 && line.debit === 0;
 
-    normalizedLines.push(normalizedLine);
+      if (isDebitPositive) {
+        // 借方: 税込金額から消費税を計算し、本体価格を逆算
+        const taxInclusiveAmount = line.debit;
+        const taxAmount = Math.floor(taxInclusiveAmount * effectiveRate / (1 + effectiveRate));
+        const taxExclusiveAmount = taxInclusiveAmount - taxAmount;
 
-    if (effectiveRate <= 0) {
-      continue;
-    }
-
-    const isDebitPositive = normalizedLine.debit > 0 && normalizedLine.credit === 0;
-    const isCreditPositive = normalizedLine.credit > 0 && normalizedLine.debit === 0;
-
-    if (!isDebitPositive && !isCreditPositive) {
-      continue;
-    }
-
-    if (isDebitPositive) {
-      const taxAmount = Math.round(normalizedLine.debit * effectiveRate);
-      if (taxAmount > 0) {
-        additional.push({
-          accountId: vatReceivable.id,
-          debit: taxAmount,
+        normalizedLines.push({
+          accountId: line.accountId,
+          debit: taxExclusiveAmount,
           credit: 0,
-          memo: "仮払消費税",
+          memo: line.memo,
+          taxCategoryId: selectedTaxCategoryId,
         });
-      }
-    }
 
-    if (isCreditPositive) {
-      const taxAmount = Math.round(normalizedLine.credit * effectiveRate);
-      if (taxAmount > 0) {
-        additional.push({
-          accountId: vatPayable.id,
+        totalDebitTax += taxAmount;
+      } else if (isCreditPositive) {
+        // 貸方: 税込金額から消費税を計算し、本体価格を逆算
+        const taxInclusiveAmount = line.credit;
+        const taxAmount = Math.floor(taxInclusiveAmount * effectiveRate / (1 + effectiveRate));
+        const taxExclusiveAmount = taxInclusiveAmount - taxAmount;
+
+        normalizedLines.push({
+          accountId: line.accountId,
           debit: 0,
-          credit: taxAmount,
-          memo: "仮受消費税",
+          credit: taxExclusiveAmount,
+          memo: line.memo,
+          taxCategoryId: selectedTaxCategoryId,
+        });
+
+        totalCreditTax += taxAmount;
+      } else {
+        // 両方0または両方入力されている場合はそのまま
+        normalizedLines.push({
+          accountId: line.accountId,
+          debit: line.debit,
+          credit: line.credit,
+          memo: line.memo,
+          taxCategoryId: selectedTaxCategoryId,
         });
       }
+    } else {
+      // 税率が0の場合はそのまま
+      normalizedLines.push({
+        accountId: line.accountId,
+        debit: line.debit,
+        credit: line.credit,
+        memo: line.memo,
+        taxCategoryId: selectedTaxCategoryId,
+      });
     }
+  }
+
+  // 消費税行を追加
+  const additional: CalculatedLine[] = [];
+
+  if (totalDebitTax > 0) {
+    additional.push({
+      accountId: vatReceivable.id,
+      debit: totalDebitTax,
+      credit: 0,
+      memo: "仮払消費税",
+      taxCategoryId: null,
+    });
+  }
+
+  if (totalCreditTax > 0) {
+    additional.push({
+      accountId: vatPayable.id,
+      debit: 0,
+      credit: totalCreditTax,
+      memo: "仮受消費税",
+      taxCategoryId: null,
+    });
   }
 
   return [...normalizedLines, ...additional];
