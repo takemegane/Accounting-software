@@ -35,6 +35,8 @@ export function GeneralLedgerReport() {
   const { setEditingEntry } = useJournalEntryEditor();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [amountFilter, setAmountFilter] = useState("");
 
   const { data, isLoading, isError } = useQuery<GeneralLedgerAccount[]>({
     queryKey: ["general-ledger"],
@@ -112,6 +114,51 @@ export function GeneralLedgerReport() {
     setDeletingId(null);
   };
 
+  const filteredData = data?.map((account) => {
+    const query = searchQuery.toLowerCase().trim();
+    const filterAmount = amountFilter ? parseFloat(amountFilter) : null;
+
+    // 勘定科目名・コードで検索
+    const accountMatch =
+      account.name.toLowerCase().includes(query) ||
+      account.code.toLowerCase().includes(query);
+
+    // エントリーをフィルタリング
+    let filteredEntries = account.entries;
+
+    // テキスト検索でフィルタリング
+    if (query && !accountMatch) {
+      filteredEntries = filteredEntries.filter((entry) => {
+        return (
+          entry.description?.toLowerCase().includes(query) ||
+          entry.memo?.toLowerCase().includes(query)
+        );
+      });
+    }
+
+    // 金額でフィルタリング
+    if (filterAmount !== null && !isNaN(filterAmount)) {
+      filteredEntries = filteredEntries.filter((entry) => {
+        return entry.debit === filterAmount || entry.credit === filterAmount;
+      });
+    }
+
+    // フィルタリング結果を返す
+    if (accountMatch && filterAmount === null) {
+      // 勘定科目がマッチし、金額フィルターがない場合は全エントリーを表示
+      return account;
+    }
+
+    if (filteredEntries.length > 0) {
+      return {
+        ...account,
+        entries: filteredEntries,
+      };
+    }
+
+    return null;
+  }).filter((account): account is GeneralLedgerAccount => account !== null);
+
   return (
     <section
       style={{
@@ -128,6 +175,67 @@ export function GeneralLedgerReport() {
         <p style={{ margin: "0.35rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>
           仕訳の明細を勘定科目別に確認できます。
         </p>
+      </div>
+
+      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "flex-end" }}>
+        <div style={{ flex: 1, minWidth: "200px" }}>
+          <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", marginBottom: "0.35rem", fontWeight: 600 }}>
+            金額で絞り込み
+          </label>
+          <input
+            type="number"
+            value={amountFilter}
+            onChange={(e) => setAmountFilter(e.target.value)}
+            placeholder="例: 10000"
+            style={{
+              width: "100%",
+              padding: "0.65rem 1rem",
+              borderRadius: "0.75rem",
+              border: "1px solid #cbd5e1",
+              fontSize: "0.9rem",
+            }}
+          />
+        </div>
+        <div style={{ flex: 1, minWidth: "240px" }}>
+          <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", marginBottom: "0.35rem", fontWeight: 600 }}>
+            テキスト検索
+          </label>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="勘定科目、摘要、メモで検索..."
+            style={{
+              width: "100%",
+              padding: "0.65rem 1rem",
+              borderRadius: "0.75rem",
+              border: "1px solid #cbd5e1",
+              fontSize: "0.9rem",
+            }}
+          />
+        </div>
+        {(amountFilter || searchQuery) && (
+          <button
+            type="button"
+            onClick={() => {
+              setAmountFilter("");
+              setSearchQuery("");
+            }}
+            style={{
+              padding: "0.65rem 1rem",
+              borderRadius: "0.75rem",
+              border: "1px solid #cbd5e1",
+              backgroundColor: "white",
+              color: "#64748b",
+              cursor: "pointer",
+              fontSize: "0.85rem",
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+            }}
+          >
+            クリア
+          </button>
+        )}
       </div>
 
       {error && (
@@ -198,10 +306,13 @@ export function GeneralLedgerReport() {
       {isLoading && <p>読み込み中...</p>}
       {isError && <p style={{ color: "#ef4444" }}>総勘定元帳の取得に失敗しました。</p>}
       {!isLoading && !isError && data && data.length === 0 && <p>まだ元帳に出力できる仕訳がありません。</p>}
+      {!isLoading && !isError && data && data.length > 0 && filteredData && filteredData.length === 0 && searchQuery && (
+        <p style={{ color: "#64748b" }}>「{searchQuery}」に一致する結果が見つかりませんでした。</p>
+      )}
 
-      {!isLoading && !isError && data && data.length > 0 && (
+      {!isLoading && !isError && filteredData && filteredData.length > 0 && (
         <div style={{ display: "grid", gap: "1.5rem" }}>
-          {data.map((account) => (
+          {filteredData.map((account) => (
             <div
               key={account.accountId}
               style={{

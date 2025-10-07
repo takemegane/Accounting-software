@@ -12,8 +12,8 @@ type Tab = "entry" | "list" | "import";
 
 const tabs: { id: Tab; label: string }[] = [
   { id: "entry", label: "仕訳入力" },
-  { id: "list", label: "仕訳一覧" },
   { id: "import", label: "CSVインポート" },
+  { id: "list", label: "仕訳一覧" },
 ];
 
 function TransactionsContent() {
@@ -55,53 +55,68 @@ function TransactionsContent() {
         </div>
       </div>
 
-      {activeTab === "entry" && (
-        <>
-          {editingEntry && (
+      {editingEntry && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "1rem",
+          }}
+          onClick={() => {}}
+        >
+          <div
+            id="edit-form"
+            style={{
+              background: "white",
+              borderRadius: "1rem",
+              padding: "2rem",
+              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+              maxWidth: "900px",
+              width: "100%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div
-              id="edit-form"
               style={{
-                background: "linear-gradient(to bottom, #eff6ff, #ffffff)",
-                borderRadius: "1rem",
-                padding: "2rem",
-                boxShadow: "0 10px 40px rgba(37, 99, 235, 0.15)",
-                marginBottom: "2rem",
-                border: "2px solid #3b82f6",
+                background: "#3b82f6",
+                color: "white",
+                padding: "0.5rem 1rem",
+                borderRadius: "0.5rem",
+                marginBottom: "1rem",
+                fontSize: "0.9rem",
+                fontWeight: 600,
+                display: "inline-block",
               }}
             >
-              <div
-                style={{
-                  background: "#3b82f6",
-                  color: "white",
-                  padding: "0.5rem 1rem",
-                  borderRadius: "0.5rem",
-                  marginBottom: "1rem",
-                  fontSize: "0.9rem",
-                  fontWeight: 600,
-                  display: "inline-block",
-                }}
-              >
-                📝 編集モード
-              </div>
-              <JournalEntryForm />
+              📝 編集モード
             </div>
-          )}
-          {!editingEntry && (
-            <section
-              style={{
-                background: "white",
-                borderRadius: "1rem",
-                padding: "2rem",
-                boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
-              }}
-            >
-              <JournalEntryForm />
-            </section>
-          )}
-        </>
+            <JournalEntryForm />
+          </div>
+        </div>
       )}
 
-      {activeTab === "list" && <TransactionsTable />}
+      {activeTab === "entry" && (
+        <section
+          style={{
+            background: "white",
+            borderRadius: "1rem",
+            padding: "2rem",
+            boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
+          }}
+        >
+          <JournalEntryForm />
+        </section>
+      )}
 
       {activeTab === "import" && (
         <>
@@ -109,6 +124,8 @@ function TransactionsContent() {
           <ImportedTransactions />
         </>
       )}
+
+      {activeTab === "list" && <TransactionsTable />}
     </>
   );
 }

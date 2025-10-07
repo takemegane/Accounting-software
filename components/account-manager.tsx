@@ -433,119 +433,161 @@ export function AccountManager() {
       </section>
 
       {editingAccount && (
-        <section
+        <div
           style={{
-            background: "white",
-            borderRadius: "1rem",
-            padding: "2rem",
-            boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "1rem",
           }}
+          onClick={() => setEditingAccount(null)}
         >
-          <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>勘定科目を編集</h2>
-          <p style={{ margin: 0, color: "#64748b", lineHeight: 1.6 }}>
-            編集対象: {editingAccount.code} {editingAccount.name}
-          </p>
-
-          <form
-            onSubmit={handleEditSubmit}
-            style={{ display: "grid", gap: "1rem", marginTop: "1.5rem", maxWidth: "520px" }}
+          <div
+            style={{
+              background: "white",
+              borderRadius: "1rem",
+              padding: "2rem",
+              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)",
+              maxWidth: "540px",
+              width: "100%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+            onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "grid", gap: "0.35rem" }}>
-              <label style={{ fontWeight: 600 }}>コード</label>
-              <input
-                type="text"
-                value={editCode}
-                onChange={(event) => setEditCode(event.target.value)}
-                placeholder="例: 512"
-                style={{ padding: "0.6rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
-                required
-              />
-            </div>
-
-            <div style={{ display: "grid", gap: "0.35rem" }}>
-              <label style={{ fontWeight: 600 }}>勘定科目名</label>
-              <input
-                type="text"
-                value={editName}
-                onChange={(event) => setEditName(event.target.value)}
-                placeholder="科目名を入力"
-                style={{ padding: "0.6rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
-                required
-              />
-            </div>
-
-            <div style={{ display: "grid", gap: "0.35rem" }}>
-              <label style={{ fontWeight: 600 }}>区分</label>
-              <select
-                value={editType}
-                onChange={(event) => setEditType(event.target.value)}
-                style={{ padding: "0.6rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
-              >
-                {ACCOUNT_TYPES.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div style={{ display: "grid", gap: "0.35rem" }}>
-              <label style={{ fontWeight: 600 }}>税区分</label>
-              <select
-                value={editTaxCategoryId ?? ""}
-                onChange={(event) => setEditTaxCategoryId(event.target.value || null)}
-                style={{ padding: "0.6rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
-                required
-                disabled={categories.length === 0}
-              >
-                <option value="" disabled>
-                  税区分を選択
-                </option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.code} {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {editError && <p style={{ color: "#ef4444", margin: 0 }}>{editError}</p>}
-
-            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-              <button
-                type="submit"
-                disabled={updateMutation.isPending || categories.length === 0}
-                style={{
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.75rem",
-                  backgroundColor: updateMutation.isPending ? "#9ca3af" : "#2563eb",
-                  color: "white",
-                  border: "none",
-                  fontWeight: 600,
-                  cursor: updateMutation.isPending ? "not-allowed" : "pointer",
-                }}
-              >
-                {updateMutation.isPending ? "保存中..." : "変更を保存"}
-              </button>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <h2 style={{ fontSize: "1.25rem", margin: 0 }}>勘定科目を編集</h2>
               <button
                 type="button"
                 onClick={() => setEditingAccount(null)}
                 style={{
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.75rem",
-                  border: "1px solid #cbd5f5",
-                  backgroundColor: "white",
-                  fontWeight: 600,
-                  color: "#1f2937",
-                  cursor: updateMutation.isPending ? "not-allowed" : "pointer",
+                  background: "none",
+                  border: "none",
+                  fontSize: "1.5rem",
+                  cursor: "pointer",
+                  color: "#64748b",
+                  padding: "0.25rem",
+                  lineHeight: 1,
                 }}
                 disabled={updateMutation.isPending}
               >
-                キャンセル
+                ×
               </button>
             </div>
-          </form>
-        </section>
+            <p style={{ margin: "0 0 1.5rem", color: "#64748b", lineHeight: 1.6 }}>
+              編集対象: {editingAccount.code} {editingAccount.name}
+            </p>
+
+            <form
+              onSubmit={handleEditSubmit}
+              style={{ display: "grid", gap: "1rem" }}
+            >
+              <div style={{ display: "grid", gap: "0.35rem" }}>
+                <label style={{ fontWeight: 600 }}>コード</label>
+                <input
+                  type="text"
+                  value={editCode}
+                  onChange={(event) => setEditCode(event.target.value)}
+                  placeholder="例: 512"
+                  style={{ padding: "0.6rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
+                  required
+                />
+              </div>
+
+              <div style={{ display: "grid", gap: "0.35rem" }}>
+                <label style={{ fontWeight: 600 }}>勘定科目名</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(event) => setEditName(event.target.value)}
+                  placeholder="科目名を入力"
+                  style={{ padding: "0.6rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
+                  required
+                />
+              </div>
+
+              <div style={{ display: "grid", gap: "0.35rem" }}>
+                <label style={{ fontWeight: 600 }}>区分</label>
+                <select
+                  value={editType}
+                  onChange={(event) => setEditType(event.target.value)}
+                  style={{ padding: "0.6rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
+                >
+                  {ACCOUNT_TYPES.map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: "grid", gap: "0.35rem" }}>
+                <label style={{ fontWeight: 600 }}>税区分</label>
+                <select
+                  value={editTaxCategoryId ?? ""}
+                  onChange={(event) => setEditTaxCategoryId(event.target.value || null)}
+                  style={{ padding: "0.6rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
+                  required
+                  disabled={categories.length === 0}
+                >
+                  <option value="" disabled>
+                    税区分を選択
+                  </option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.code} {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {editError && <p style={{ color: "#ef4444", margin: 0 }}>{editError}</p>}
+
+              <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
+                <button
+                  type="submit"
+                  disabled={updateMutation.isPending || categories.length === 0}
+                  style={{
+                    padding: "0.75rem 1.5rem",
+                    borderRadius: "0.75rem",
+                    backgroundColor: updateMutation.isPending ? "#9ca3af" : "#2563eb",
+                    color: "white",
+                    border: "none",
+                    fontWeight: 600,
+                    cursor: updateMutation.isPending ? "not-allowed" : "pointer",
+                    flex: 1,
+                  }}
+                >
+                  {updateMutation.isPending ? "保存中..." : "変更を保存"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingAccount(null)}
+                  style={{
+                    padding: "0.75rem 1.5rem",
+                    borderRadius: "0.75rem",
+                    border: "1px solid #cbd5f5",
+                    backgroundColor: "white",
+                    fontWeight: 600,
+                    color: "#1f2937",
+                    cursor: updateMutation.isPending ? "not-allowed" : "pointer",
+                    flex: 1,
+                  }}
+                  disabled={updateMutation.isPending}
+                >
+                  キャンセル
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       <section

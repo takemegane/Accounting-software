@@ -52,8 +52,75 @@ export function IncomeStatementReport() {
     },
   });
 
-  const revenueRows = query.data?.rows.filter((row) => row.type === "REVENUE") ?? [];
-  const expenseRows = query.data?.rows.filter((row) => row.type === "EXPENSE") ?? [];
+  // 勘定科目コードの範囲で分類
+  // 401-499: 売上高
+  const salesRows = query.data?.rows.filter((row) =>
+    row.type === "REVENUE" && parseInt(row.code) >= 401 && parseInt(row.code) < 500
+  ) ?? [];
+
+  // 501-505: 売上原価
+  const costOfSalesRows = query.data?.rows.filter((row) =>
+    row.type === "EXPENSE" && parseInt(row.code) >= 501 && parseInt(row.code) <= 505
+  ) ?? [];
+
+  // 506-599: 販売費及び一般管理費
+  const sgaRows = query.data?.rows.filter((row) =>
+    row.type === "EXPENSE" && parseInt(row.code) >= 506 && parseInt(row.code) < 600
+  ) ?? [];
+
+  // 601-699: 営業外収益
+  const nonOperatingIncomeRows = query.data?.rows.filter((row) =>
+    row.type === "REVENUE" && parseInt(row.code) >= 601 && parseInt(row.code) < 700
+  ) ?? [];
+
+  // 701-799: 営業外費用
+  const nonOperatingExpenseRows = query.data?.rows.filter((row) =>
+    row.type === "EXPENSE" && parseInt(row.code) >= 701 && parseInt(row.code) < 800
+  ) ?? [];
+
+  // 801-899: 特別利益
+  const extraordinaryIncomeRows = query.data?.rows.filter((row) =>
+    row.type === "REVENUE" && parseInt(row.code) >= 801 && parseInt(row.code) < 900
+  ) ?? [];
+
+  // 901-999: 特別損失
+  const extraordinaryLossRows = query.data?.rows.filter((row) =>
+    row.type === "EXPENSE" && parseInt(row.code) >= 901 && parseInt(row.code) < 1000
+  ) ?? [];
+
+  // 計算
+  const salesTotal = salesRows.reduce((sum, row) => sum + row.current, 0);
+  const ytdSalesTotal = salesRows.reduce((sum, row) => sum + row.yearToDate, 0);
+
+  const costOfSalesTotal = costOfSalesRows.reduce((sum, row) => sum + row.current, 0);
+  const ytdCostOfSalesTotal = costOfSalesRows.reduce((sum, row) => sum + row.yearToDate, 0);
+
+  const grossProfit = salesTotal - costOfSalesTotal;
+  const ytdGrossProfit = ytdSalesTotal - ytdCostOfSalesTotal;
+
+  const sgaTotal = sgaRows.reduce((sum, row) => sum + row.current, 0);
+  const ytdSgaTotal = sgaRows.reduce((sum, row) => sum + row.yearToDate, 0);
+
+  const operatingIncome = grossProfit - sgaTotal;
+  const ytdOperatingIncome = ytdGrossProfit - ytdSgaTotal;
+
+  const nonOperatingIncomeTotal = nonOperatingIncomeRows.reduce((sum, row) => sum + row.current, 0);
+  const ytdNonOperatingIncomeTotal = nonOperatingIncomeRows.reduce((sum, row) => sum + row.yearToDate, 0);
+
+  const nonOperatingExpenseTotal = nonOperatingExpenseRows.reduce((sum, row) => sum + row.current, 0);
+  const ytdNonOperatingExpenseTotal = nonOperatingExpenseRows.reduce((sum, row) => sum + row.yearToDate, 0);
+
+  const ordinaryIncome = operatingIncome + nonOperatingIncomeTotal - nonOperatingExpenseTotal;
+  const ytdOrdinaryIncome = ytdOperatingIncome + ytdNonOperatingIncomeTotal - ytdNonOperatingExpenseTotal;
+
+  const extraordinaryIncomeTotal = extraordinaryIncomeRows.reduce((sum, row) => sum + row.current, 0);
+  const ytdExtraordinaryIncomeTotal = extraordinaryIncomeRows.reduce((sum, row) => sum + row.yearToDate, 0);
+
+  const extraordinaryLossTotal = extraordinaryLossRows.reduce((sum, row) => sum + row.current, 0);
+  const ytdExtraordinaryLossTotal = extraordinaryLossRows.reduce((sum, row) => sum + row.yearToDate, 0);
+
+  const incomeBeforeTax = ordinaryIncome + extraordinaryIncomeTotal - extraordinaryLossTotal;
+  const ytdIncomeBeforeTax = ytdOrdinaryIncome + ytdExtraordinaryIncomeTotal - ytdExtraordinaryLossTotal;
 
   return (
     <section
@@ -121,14 +188,15 @@ export function IncomeStatementReport() {
               </tr>
             </thead>
             <tbody>
+              {/* I. 売上高 */}
               <tr style={{ background: "#f8fafc" }}>
                 <td colSpan={3} style={{ padding: "0.5rem", fontWeight: 600, textAlign: "left" }}>
-                  売上高
+                  I. 売上高
                 </td>
               </tr>
-              {revenueRows.map((row) => (
+              {salesRows.map((row) => (
                 <tr key={row.accountId} style={{ borderTop: "1px solid #e2e8f0" }}>
-                  <td style={{ padding: "0.75rem", textAlign: "left" }}>
+                  <td style={{ padding: "0.75rem", paddingLeft: "2rem", textAlign: "left" }}>
                     <span style={{ color: "#475569", fontSize: "0.85rem", marginRight: "0.35rem" }}>{row.code}</span>
                     {row.name}
                   </td>
@@ -136,32 +204,160 @@ export function IncomeStatementReport() {
                   <td style={{ padding: "0.75rem" }}>{formatCurrency(row.yearToDate)}</td>
                 </tr>
               ))}
-              <tr style={{ borderTop: "1px solid #0f172a", fontWeight: 600 }}>
-                <td style={{ padding: "0.75rem", textAlign: "left" }}>売上高合計</td>
-                <td style={{ padding: "0.75rem" }}>{formatCurrency(query.data.totals.revenue)}</td>
-                <td style={{ padding: "0.75rem" }}>{formatCurrency(query.data.yearToDate.revenue)}</td>
-              </tr>
 
-              <tr style={{ background: "#f8fafc" }}>
-                <td colSpan={3} style={{ padding: "0.5rem", fontWeight: 600, textAlign: "left" }}>
-                  費用
-                </td>
-              </tr>
-              {expenseRows.map((row) => (
-                <tr key={row.accountId} style={{ borderTop: "1px solid #e2e8f0" }}>
-                  <td style={{ padding: "0.75rem", textAlign: "left" }}>
-                    <span style={{ color: "#475569", fontSize: "0.85rem", marginRight: "0.35rem" }}>{row.code}</span>
-                    {row.name}
-                  </td>
-                  <td style={{ padding: "0.75rem" }}>{formatCurrency(row.current)}</td>
-                  <td style={{ padding: "0.75rem" }}>{formatCurrency(row.yearToDate)}</td>
+              {/* II. 売上原価 */}
+              {costOfSalesRows.length > 0 && (
+                <>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <td colSpan={3} style={{ padding: "0.5rem", fontWeight: 600, textAlign: "left" }}>
+                      II. 売上原価
+                    </td>
+                  </tr>
+                  {costOfSalesRows.map((row) => (
+                    <tr key={row.accountId} style={{ borderTop: "1px solid #e2e8f0" }}>
+                      <td style={{ padding: "0.75rem", paddingLeft: "2rem", textAlign: "left" }}>
+                        <span style={{ color: "#475569", fontSize: "0.85rem", marginRight: "0.35rem" }}>{row.code}</span>
+                        {row.name}
+                      </td>
+                      <td style={{ padding: "0.75rem" }}>{formatCurrency(row.current)}</td>
+                      <td style={{ padding: "0.75rem" }}>{formatCurrency(row.yearToDate)}</td>
+                    </tr>
+                  ))}
+                  <tr style={{ borderTop: "2px solid #475569", fontWeight: 700, background: "#f8fafc" }}>
+                    <td style={{ padding: "0.75rem", paddingLeft: "1rem", textAlign: "left" }}>売上総利益</td>
+                    <td style={{ padding: "0.75rem" }}>{formatCurrency(grossProfit)}</td>
+                    <td style={{ padding: "0.75rem" }}>{formatCurrency(ytdGrossProfit)}</td>
+                  </tr>
+                </>
+              )}
+
+              {/* III. 販売費及び一般管理費 */}
+              {sgaRows.length > 0 && (
+                <>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <td colSpan={3} style={{ padding: "0.5rem", fontWeight: 600, textAlign: "left" }}>
+                      III. 販売費及び一般管理費
+                    </td>
+                  </tr>
+                  {sgaRows.map((row) => (
+                    <tr key={row.accountId} style={{ borderTop: "1px solid #e2e8f0" }}>
+                      <td style={{ padding: "0.75rem", paddingLeft: "2rem", textAlign: "left" }}>
+                        <span style={{ color: "#475569", fontSize: "0.85rem", marginRight: "0.35rem" }}>{row.code}</span>
+                        {row.name}
+                      </td>
+                      <td style={{ padding: "0.75rem" }}>{formatCurrency(row.current)}</td>
+                      <td style={{ padding: "0.75rem" }}>{formatCurrency(row.yearToDate)}</td>
+                    </tr>
+                  ))}
+                  <tr style={{ borderTop: "2px solid #475569", fontWeight: 700, background: "#f8fafc" }}>
+                    <td style={{ padding: "0.75rem", paddingLeft: "1rem", textAlign: "left" }}>営業利益</td>
+                    <td style={{ padding: "0.75rem" }}>{formatCurrency(operatingIncome)}</td>
+                    <td style={{ padding: "0.75rem" }}>{formatCurrency(ytdOperatingIncome)}</td>
+                  </tr>
+                </>
+              )}
+
+              {/* IV. 営業外収益 */}
+              {nonOperatingIncomeRows.length > 0 && (
+                <>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <td colSpan={3} style={{ padding: "0.5rem", fontWeight: 600, textAlign: "left" }}>
+                      IV. 営業外収益
+                    </td>
+                  </tr>
+                  {nonOperatingIncomeRows.map((row) => (
+                    <tr key={row.accountId} style={{ borderTop: "1px solid #e2e8f0" }}>
+                      <td style={{ padding: "0.75rem", paddingLeft: "2rem", textAlign: "left" }}>
+                        <span style={{ color: "#475569", fontSize: "0.85rem", marginRight: "0.35rem" }}>{row.code}</span>
+                        {row.name}
+                      </td>
+                      <td style={{ padding: "0.75rem" }}>{formatCurrency(row.current)}</td>
+                      <td style={{ padding: "0.75rem" }}>{formatCurrency(row.yearToDate)}</td>
+                    </tr>
+                  ))}
+                </>
+              )}
+
+              {/* V. 営業外費用 */}
+              {nonOperatingExpenseRows.length > 0 && (
+                <>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <td colSpan={3} style={{ padding: "0.5rem", fontWeight: 600, textAlign: "left" }}>
+                      V. 営業外費用
+                    </td>
+                  </tr>
+                  {nonOperatingExpenseRows.map((row) => (
+                    <tr key={row.accountId} style={{ borderTop: "1px solid #e2e8f0" }}>
+                      <td style={{ padding: "0.75rem", paddingLeft: "2rem", textAlign: "left" }}>
+                        <span style={{ color: "#475569", fontSize: "0.85rem", marginRight: "0.35rem" }}>{row.code}</span>
+                        {row.name}
+                      </td>
+                      <td style={{ padding: "0.75rem" }}>{formatCurrency(row.current)}</td>
+                      <td style={{ padding: "0.75rem" }}>{formatCurrency(row.yearToDate)}</td>
+                    </tr>
+                  ))}
+                </>
+              )}
+
+              {/* 経常利益 */}
+              {(nonOperatingIncomeRows.length > 0 || nonOperatingExpenseRows.length > 0) && (
+                <tr style={{ borderTop: "2px solid #475569", fontWeight: 700, background: "#f8fafc" }}>
+                  <td style={{ padding: "0.75rem", paddingLeft: "1rem", textAlign: "left" }}>経常利益</td>
+                  <td style={{ padding: "0.75rem" }}>{formatCurrency(ordinaryIncome)}</td>
+                  <td style={{ padding: "0.75rem" }}>{formatCurrency(ytdOrdinaryIncome)}</td>
                 </tr>
-              ))}
-              <tr style={{ borderTop: "1px solid #0f172a", fontWeight: 600 }}>
-                <td style={{ padding: "0.75rem", textAlign: "left" }}>費用合計</td>
-                <td style={{ padding: "0.75rem" }}>{formatCurrency(query.data.totals.expense)}</td>
-                <td style={{ padding: "0.75rem" }}>{formatCurrency(query.data.yearToDate.expense)}</td>
-              </tr>
+              )}
+
+              {/* VI. 特別利益 */}
+              {extraordinaryIncomeRows.length > 0 && (
+                <>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <td colSpan={3} style={{ padding: "0.5rem", fontWeight: 600, textAlign: "left" }}>
+                      VI. 特別利益
+                    </td>
+                  </tr>
+                  {extraordinaryIncomeRows.map((row) => (
+                    <tr key={row.accountId} style={{ borderTop: "1px solid #e2e8f0" }}>
+                      <td style={{ padding: "0.75rem", paddingLeft: "2rem", textAlign: "left" }}>
+                        <span style={{ color: "#475569", fontSize: "0.85rem", marginRight: "0.35rem" }}>{row.code}</span>
+                        {row.name}
+                      </td>
+                      <td style={{ padding: "0.75rem" }}>{formatCurrency(row.current)}</td>
+                      <td style={{ padding: "0.75rem" }}>{formatCurrency(row.yearToDate)}</td>
+                    </tr>
+                  ))}
+                </>
+              )}
+
+              {/* VII. 特別損失 */}
+              {extraordinaryLossRows.length > 0 && (
+                <>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <td colSpan={3} style={{ padding: "0.5rem", fontWeight: 600, textAlign: "left" }}>
+                      VII. 特別損失
+                    </td>
+                  </tr>
+                  {extraordinaryLossRows.map((row) => (
+                    <tr key={row.accountId} style={{ borderTop: "1px solid #e2e8f0" }}>
+                      <td style={{ padding: "0.75rem", paddingLeft: "2rem", textAlign: "left" }}>
+                        <span style={{ color: "#475569", fontSize: "0.85rem", marginRight: "0.35rem" }}>{row.code}</span>
+                        {row.name}
+                      </td>
+                      <td style={{ padding: "0.75rem" }}>{formatCurrency(row.current)}</td>
+                      <td style={{ padding: "0.75rem" }}>{formatCurrency(row.yearToDate)}</td>
+                    </tr>
+                  ))}
+                </>
+              )}
+
+              {/* 税引前当期純利益 */}
+              {(extraordinaryIncomeRows.length > 0 || extraordinaryLossRows.length > 0) && (
+                <tr style={{ borderTop: "2px solid #475569", fontWeight: 700, background: "#f8fafc" }}>
+                  <td style={{ padding: "0.75rem", paddingLeft: "1rem", textAlign: "left" }}>税引前当期純利益</td>
+                  <td style={{ padding: "0.75rem" }}>{formatCurrency(incomeBeforeTax)}</td>
+                  <td style={{ padding: "0.75rem" }}>{formatCurrency(ytdIncomeBeforeTax)}</td>
+                </tr>
+              )}
             </tbody>
             <tfoot>
               <tr style={{ borderTop: "2px solid #111827", fontWeight: 700, background: "#f1f5f9" }}>

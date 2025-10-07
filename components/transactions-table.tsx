@@ -37,7 +37,9 @@ type JournalEntryDetail = {
 };
 
 export function TransactionsTable() {
-  const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
+  const [amountFilter, setAmountFilter] = useState("");
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -55,15 +57,49 @@ export function TransactionsTable() {
 
   const filtered = useMemo(() => {
     if (!data) return [];
-    if (!search.trim()) return data;
-    const keyword = search.trim().toLowerCase();
+
     return data.filter((entry) => {
-      if (entry.description?.toLowerCase().includes(keyword)) {
+      // 日付フィルター
+      if (dateFilter) {
+        const entryDate = entry.entryDate.substring(0, 10); // YYYY-MM-DD
+        if (!entryDate.startsWith(dateFilter)) {
+          return false;
+        }
+      }
+
+      // 金額フィルター
+      if (amountFilter) {
+        const filterAmount = parseFloat(amountFilter);
+        if (!isNaN(filterAmount)) {
+          const hasMatchingAmount = entry.lines.some((line) => {
+            return line.debit === filterAmount || line.credit === filterAmount;
+          });
+          if (!hasMatchingAmount) {
+            return false;
+          }
+        }
+      }
+
+      // テキスト検索
+      const query = searchQuery.toLowerCase().trim();
+      if (!query) {
         return true;
       }
-      return entry.lines.some((line) => line.accountName.toLowerCase().includes(keyword));
+
+      // 摘要で検索
+      const descriptionMatch = entry.description?.toLowerCase().includes(query);
+
+      // 勘定科目・メモで検索
+      const lineMatch = entry.lines.some((line) => {
+        return (
+          line.accountName.toLowerCase().includes(query) ||
+          line.memo?.toLowerCase().includes(query)
+        );
+      });
+
+      return descriptionMatch || lineMatch;
     });
-  }, [data, search]);
+  }, [data, dateFilter, amountFilter, searchQuery]);
 
   const editMutation = useMutation<JournalEntryDetail, Error, string>({
     mutationFn: async (entryId) => {
@@ -187,25 +223,90 @@ export function TransactionsTable() {
         gap: "1.5rem",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
-          <h2 style={{ fontSize: "1.25rem", margin: 0 }}>仕訳一覧</h2>
-          <p style={{ margin: "0.35rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>
-            最新20件の仕訳を表示しています。
-          </p>
+      <div>
+        <h2 style={{ fontSize: "1.25rem", margin: 0 }}>仕訳一覧</h2>
+        <p style={{ margin: "0.35rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>
+          最新20件の仕訳を表示しています。
+        </p>
+      </div>
+
+      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "flex-end" }}>
+        <div style={{ flex: 1, minWidth: "180px" }}>
+          <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", marginBottom: "0.35rem", fontWeight: 600 }}>
+            日付で絞り込み
+          </label>
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "0.65rem 1rem",
+              borderRadius: "0.75rem",
+              border: "1px solid #cbd5e1",
+              fontSize: "0.9rem",
+            }}
+          />
         </div>
-        <input
-          type="search"
-          placeholder="摘要や勘定科目で検索"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          style={{
-            padding: "0.5rem 0.75rem",
-            borderRadius: "0.75rem",
-            border: "1px solid #cbd5f5",
-            minWidth: "240px",
-          }}
-        />
+        <div style={{ flex: 1, minWidth: "180px" }}>
+          <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", marginBottom: "0.35rem", fontWeight: 600 }}>
+            金額で絞り込み
+          </label>
+          <input
+            type="number"
+            value={amountFilter}
+            onChange={(e) => setAmountFilter(e.target.value)}
+            placeholder="例: 10000"
+            style={{
+              width: "100%",
+              padding: "0.65rem 1rem",
+              borderRadius: "0.75rem",
+              border: "1px solid #cbd5e1",
+              fontSize: "0.9rem",
+            }}
+          />
+        </div>
+        <div style={{ flex: 1, minWidth: "200px" }}>
+          <label style={{ display: "block", fontSize: "0.85rem", color: "#475569", marginBottom: "0.35rem", fontWeight: 600 }}>
+            テキスト検索
+          </label>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="摘要、勘定科目、メモで検索..."
+            style={{
+              width: "100%",
+              padding: "0.65rem 1rem",
+              borderRadius: "0.75rem",
+              border: "1px solid #cbd5e1",
+              fontSize: "0.9rem",
+            }}
+          />
+        </div>
+        {(dateFilter || amountFilter || searchQuery) && (
+          <button
+            type="button"
+            onClick={() => {
+              setDateFilter("");
+              setAmountFilter("");
+              setSearchQuery("");
+            }}
+            style={{
+              padding: "0.65rem 1rem",
+              borderRadius: "0.75rem",
+              border: "1px solid #cbd5e1",
+              backgroundColor: "white",
+              color: "#64748b",
+              cursor: "pointer",
+              fontSize: "0.85rem",
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+            }}
+          >
+            クリア
+          </button>
+        )}
       </div>
 
       {actionMessage && <p style={{ color: "#16a34a", margin: 0 }}>{actionMessage}</p>}
