@@ -24,3 +24,12 @@ yarn-error.log*
 
 # Prisma
 /prisma/generated
+/prisma/dev.db
+/prisma/dev.db-journal
+/prisma/prisma/
+
+# PWA (auto-generated)
+/public/sw.js
+/public/workbox-*.js
+/public/*worker*.js
+/public/sw*.js
