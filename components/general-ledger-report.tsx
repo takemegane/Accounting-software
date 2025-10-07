@@ -1,6 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useJournalEntryEditor } from "@/components/journal-entry-editor-context";
 
 type GeneralLedgerEntry = {
   lineId: string;
@@ -29,6 +31,11 @@ type GeneralLedgerAccount = {
 const currency = (value: number) => `${value.toLocaleString()} 円`;
 
 export function GeneralLedgerReport() {
+  const queryClient = useQueryClient();
+  const { setEditingEntry } = useJournalEntryEditor();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const { data, isLoading, isError } = useQuery<GeneralLedgerAccount[]>({
     queryKey: ["general-ledger"],
     queryFn: async () => {
@@ -39,6 +46,63 @@ export function GeneralLedgerReport() {
       return response.json();
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/journal-entries/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ message: "削除に失敗しました" }));
+        throw new Error(data.message ?? "削除に失敗しました");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      setDeletingId(null);
+      setError(null);
+      queryClient.invalidateQueries({ queryKey: ["general-ledger"] });
+      queryClient.invalidateQueries({ queryKey: ["journal-report"] });
+      queryClient.invalidateQueries({ queryKey: ["journal-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["trial-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (err: Error) => {
+      setError(err.message || "仕訳の削除に失敗しました");
+      setDeletingId(null);
+    },
+  });
+
+  const handleEdit = async (entryId: string) => {
+    try {
+      const response = await fetch(`/api/journal-entries/${entryId}`);
+      if (!response.ok) {
+        throw new Error("仕訳の取得に失敗しました");
+      }
+      const entry = await response.json();
+      setEditingEntry(entry);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "仕訳の取得に失敗しました");
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    setDeletingId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deletingId) {
+      deleteMutation.mutate(deletingId);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeletingId(null);
+  };
 
   return (
     <section
@@ -57,6 +121,71 @@ export function GeneralLedgerReport() {
           仕訳の明細を勘定科目別に確認できます。
         </p>
       </div>
+
+      {error && (
+        <div
+          style={{
+            background: "#fee2e2",
+            border: "1px solid #fca5a5",
+            borderRadius: "0.75rem",
+            padding: "0.75rem 1rem",
+            color: "#991b1b",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {deletingId && (
+        <div
+          style={{
+            background: "#fffbeb",
+            border: "1px solid #fbbf24",
+            borderRadius: "0.75rem",
+            padding: "1rem",
+            display: "grid",
+            gap: "1rem",
+          }}
+        >
+          <p style={{ margin: 0, color: "#92400e", fontWeight: 600 }}>
+            この仕訳を削除してもよろしいですか？
+          </p>
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <button
+              type="button"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "0.5rem",
+                border: "none",
+                backgroundColor: deleteMutation.isPending ? "#9ca3af" : "#dc2626",
+                color: "white",
+                fontWeight: 600,
+                cursor: deleteMutation.isPending ? "not-allowed" : "pointer",
+              }}
+            >
+              {deleteMutation.isPending ? "削除中..." : "削除する"}
+            </button>
+            <button
+              type="button"
+              onClick={cancelDelete}
+              disabled={deleteMutation.isPending}
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "0.5rem",
+                border: "1px solid #cbd5e1",
+                backgroundColor: "white",
+                color: "#1f2937",
+                fontWeight: 600,
+                cursor: deleteMutation.isPending ? "not-allowed" : "pointer",
+              }}
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      )}
 
       {isLoading && <p>読み込み中...</p>}
       {isError && <p style={{ color: "#ef4444" }}>総勘定元帳の取得に失敗しました。</p>}
@@ -105,6 +234,7 @@ export function GeneralLedgerReport() {
                       <th style={{ padding: "0.5rem", textAlign: "right" }}>貸方</th>
                       <th style={{ padding: "0.5rem", textAlign: "right" }}>残高</th>
                       <th style={{ padding: "0.5rem" }}>メモ</th>
+                      <th style={{ padding: "0.5rem", textAlign: "center" }}>操作</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -124,6 +254,42 @@ export function GeneralLedgerReport() {
                           {entry.balance.toLocaleString()}
                         </td>
                         <td style={{ padding: "0.65rem" }}>{entry.memo ?? ""}</td>
+                        <td style={{ padding: "0.65rem", textAlign: "center" }}>
+                          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
+                            <button
+                              type="button"
+                              onClick={() => handleEdit(entry.journalEntryId)}
+                              style={{
+                                padding: "0.35rem 0.75rem",
+                                borderRadius: "0.4rem",
+                                border: "1px solid #2563eb",
+                                backgroundColor: "white",
+                                color: "#2563eb",
+                                fontWeight: 600,
+                                cursor: "pointer",
+                                fontSize: "0.75rem",
+                              }}
+                            >
+                              編集
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(entry.journalEntryId)}
+                              style={{
+                                padding: "0.35rem 0.75rem",
+                                borderRadius: "0.4rem",
+                                border: "1px solid #dc2626",
+                                backgroundColor: "white",
+                                color: "#dc2626",
+                                fontWeight: 600,
+                                cursor: "pointer",
+                                fontSize: "0.75rem",
+                              }}
+                            >
+                              削除
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

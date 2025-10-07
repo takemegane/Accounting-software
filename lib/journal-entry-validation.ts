@@ -132,6 +132,16 @@ export async function prepareJournalEntryData(
     }
   );
 
+  // 税処理後の借方・貸方の合計を再チェック
+  const finalDebit = calculatedLines.reduce((sum, line) => sum + line.debit, 0);
+  const finalCredit = calculatedLines.reduce((sum, line) => sum + line.credit, 0);
+
+  if (finalDebit !== finalCredit) {
+    throw new JournalEntryValidationError(
+      `税処理後の借方と貸方の合計が一致していません（借方: ${finalDebit}, 貸方: ${finalCredit}）`
+    );
+  }
+
   return {
     parsedDate,
     calculatedLines,

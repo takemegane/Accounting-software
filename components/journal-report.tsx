@@ -1,6 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useJournalEntryEditor } from "@/components/journal-entry-editor-context";
 
 type JournalReportLine = {
   id: string;
@@ -24,6 +26,11 @@ type JournalReportEntry = {
 };
 
 export function JournalReport() {
+  const queryClient = useQueryClient();
+  const { setEditingEntry } = useJournalEntryEditor();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const { data, isLoading, isError } = useQuery<JournalReportEntry[]>({
     queryKey: ["journal-report"],
     queryFn: async () => {
@@ -34,6 +41,63 @@ export function JournalReport() {
       return response.json();
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/journal-entries/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({ message: "削除に失敗しました" }));
+        throw new Error(data.message ?? "削除に失敗しました");
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      setDeletingId(null);
+      setError(null);
+      queryClient.invalidateQueries({ queryKey: ["journal-report"] });
+      queryClient.invalidateQueries({ queryKey: ["general-ledger"] });
+      queryClient.invalidateQueries({ queryKey: ["journal-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["trial-balance"] });
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (err: Error) => {
+      setError(err.message || "仕訳の削除に失敗しました");
+      setDeletingId(null);
+    },
+  });
+
+  const handleEdit = async (entryId: string) => {
+    try {
+      const response = await fetch(`/api/journal-entries/${entryId}`);
+      if (!response.ok) {
+        throw new Error("仕訳の取得に失敗しました");
+      }
+      const entry = await response.json();
+      setEditingEntry(entry);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "仕訳の取得に失敗しました");
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    setDeletingId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deletingId) {
+      deleteMutation.mutate(deletingId);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeletingId(null);
+  };
 
   return (
     <section
@@ -53,6 +117,71 @@ export function JournalReport() {
         </p>
       </div>
 
+      {error && (
+        <div
+          style={{
+            background: "#fee2e2",
+            border: "1px solid #fca5a5",
+            borderRadius: "0.75rem",
+            padding: "0.75rem 1rem",
+            color: "#991b1b",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {deletingId && (
+        <div
+          style={{
+            background: "#fffbeb",
+            border: "1px solid #fbbf24",
+            borderRadius: "0.75rem",
+            padding: "1rem",
+            display: "grid",
+            gap: "1rem",
+          }}
+        >
+          <p style={{ margin: 0, color: "#92400e", fontWeight: 600 }}>
+            この仕訳を削除してもよろしいですか？
+          </p>
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <button
+              type="button"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "0.5rem",
+                border: "none",
+                backgroundColor: deleteMutation.isPending ? "#9ca3af" : "#dc2626",
+                color: "white",
+                fontWeight: 600,
+                cursor: deleteMutation.isPending ? "not-allowed" : "pointer",
+              }}
+            >
+              {deleteMutation.isPending ? "削除中..." : "削除する"}
+            </button>
+            <button
+              type="button"
+              onClick={cancelDelete}
+              disabled={deleteMutation.isPending}
+              style={{
+                padding: "0.5rem 1rem",
+                borderRadius: "0.5rem",
+                border: "1px solid #cbd5e1",
+                backgroundColor: "white",
+                color: "#1f2937",
+                fontWeight: 600,
+                cursor: deleteMutation.isPending ? "not-allowed" : "pointer",
+              }}
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      )}
+
       {isLoading && <p>読み込み中...</p>}
       {isError && <p style={{ color: "#ef4444" }}>仕訳帳の取得に失敗しました。</p>}
       {!isLoading && !isError && data && data.length === 0 && <p>まだ仕訳が登録されていません。</p>}
@@ -70,8 +199,8 @@ export function JournalReport() {
                 gap: "1rem",
               }}
             >
-              <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
-                <div>
+              <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", alignItems: "flex-start" }}>
+                <div style={{ flex: 1, minWidth: "200px" }}>
                   <h3 style={{ margin: 0, fontSize: "1.1rem" }}>
                     {new Date(entry.entryDate).toLocaleDateString("ja-JP")}
                   </h3>
@@ -79,9 +208,45 @@ export function JournalReport() {
                     {entry.description ?? "(摘要なし)"}
                   </p>
                 </div>
-                <div style={{ textAlign: "right", fontSize: "0.9rem", color: "#1f2937" }}>
-                  <div>借方合計: {entry.totals.debit.toLocaleString()} 円</div>
-                  <div>貸方合計: {entry.totals.credit.toLocaleString()} 円</div>
+                <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
+                  <div style={{ textAlign: "right", fontSize: "0.9rem", color: "#1f2937" }}>
+                    <div>借方合計: {entry.totals.debit.toLocaleString()} 円</div>
+                    <div>貸方合計: {entry.totals.credit.toLocaleString()} 円</div>
+                  </div>
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <button
+                      type="button"
+                      onClick={() => handleEdit(entry.id)}
+                      style={{
+                        padding: "0.5rem 1rem",
+                        borderRadius: "0.5rem",
+                        border: "1px solid #2563eb",
+                        backgroundColor: "white",
+                        color: "#2563eb",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        fontSize: "0.85rem",
+                      }}
+                    >
+                      編集
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(entry.id)}
+                      style={{
+                        padding: "0.5rem 1rem",
+                        borderRadius: "0.5rem",
+                        border: "1px solid #dc2626",
+                        backgroundColor: "white",
+                        color: "#dc2626",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        fontSize: "0.85rem",
+                      }}
+                    >
+                      削除
+                    </button>
+                  </div>
                 </div>
               </div>
 
