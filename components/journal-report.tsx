@@ -41,7 +41,10 @@ export function JournalReport() {
       if (!response.ok) {
         throw new Error("仕訳帳の取得に失敗しました");
       }
-      return response.json();
+      const result = await response.json();
+      console.log('[仕訳帳] APIレスポンス件数:', result.length);
+      console.log('[仕訳帳] 全データ:', result);
+      return result;
     },
   });
 
@@ -152,6 +155,10 @@ export function JournalReport() {
 
     return descriptionMatch || lineMatch;
   });
+
+  console.log('[仕訳帳] フィルター前:', data?.length);
+  console.log('[仕訳帳] フィルター後:', filteredData?.length);
+  console.log('[仕訳帳] フィルター条件:', { dateFilter, amountFilter, searchQuery });
 
   return (
     <section
