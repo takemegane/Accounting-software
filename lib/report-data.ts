@@ -232,7 +232,17 @@ export async function getJournalDetailData(businessId: string) {
     where: { businessId },
     include: {
       lines: {
-        include: { account: true },
+        include: {
+          account: {
+            // 削除済み（isActive: false）の勘定科目も含める
+            select: {
+              id: true,
+              code: true,
+              name: true,
+              isActive: true,
+            },
+          },
+        },
         orderBy: { lineNumber: "asc" },
       },
     },
@@ -271,7 +281,16 @@ export async function getGeneralLedgerData(businessId: string) {
   const lines = await prisma.journalEntryLine.findMany({
     where: { journalEntry: { businessId } },
     include: {
-      account: true,
+      account: {
+        // 削除済み（isActive: false）の勘定科目も含める
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          type: true,
+          isActive: true,
+        },
+      },
       journalEntry: true,
     },
     orderBy: [
