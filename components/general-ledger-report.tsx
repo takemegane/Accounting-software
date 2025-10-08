@@ -45,12 +45,7 @@ export function GeneralLedgerReport() {
       if (!response.ok) {
         throw new Error("総勘定元帳の取得に失敗しました");
       }
-      const result = await response.json();
-      console.log('[総勘定元帳] APIレスポンス件数:', result.length);
-      console.log('[総勘定元帳] 全データ:', result);
-      const account509 = result.find((acc: any) => acc.code === '509');
-      console.log('[総勘定元帳] 509のデータ:', account509);
-      return result;
+      return response.json();
     },
   });
 
@@ -163,10 +158,6 @@ export function GeneralLedgerReport() {
 
     return null;
   }).filter((account): account is GeneralLedgerAccount => account !== null);
-
-  console.log('[総勘定元帳] フィルター前:', data?.length);
-  console.log('[総勘定元帳] フィルター後:', filteredData?.length);
-  console.log('[総勘定元帳] フィルター条件:', { amountFilter, searchQuery });
 
   return (
     <section

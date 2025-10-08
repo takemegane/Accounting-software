@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { getBusinessContext } from "@/lib/business-context";
 import { getJournalDetailData } from "@/lib/report-data";
 
+// キャッシュを無効化して常に最新データを返す
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   const { business } = await getBusinessContext();
   const entries = await getJournalDetailData(business.id);
