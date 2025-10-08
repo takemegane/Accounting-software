@@ -97,12 +97,16 @@ export function AccountManager() {
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const payload = {
-        code: code.trim(),
+      const payload: any = {
         name: name.trim(),
         type,
         taxCategoryId: taxCategoryId,
       };
+
+      // コードが入力されている場合のみ含める
+      if (code.trim()) {
+        payload.code = code.trim();
+      }
 
       const response = await fetch("/api/accounts", {
         method: "POST",
@@ -212,8 +216,8 @@ export function AccountManager() {
     setMessage(null);
     setError(null);
 
-    if (!code.trim() || !name.trim() || !taxCategoryId) {
-      setError("コード・名称・税区分を入力してください");
+    if (!name.trim() || !taxCategoryId) {
+      setError("名称・税区分を入力してください");
       return;
     }
 
@@ -332,7 +336,7 @@ export function AccountManager() {
       >
         <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>勘定科目を追加</h2>
         <p style={{ margin: 0, color: "#64748b", lineHeight: 1.6 }}>
-          コードは事業内で一意となるように設定してください。登録後は試算表やレポートに即時反映されます。
+          コードは未入力の場合、区分ごとに自動採番されます。登録後は試算表やレポートに即時反映されます。
         </p>
 
         {categoriesError && (
@@ -353,14 +357,13 @@ export function AccountManager() {
 
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem", marginTop: "1.5rem", maxWidth: "520px" }}>
           <div style={{ display: "grid", gap: "0.35rem" }}>
-            <label style={{ fontWeight: 600 }}>コード</label>
+            <label style={{ fontWeight: 600 }}>コード（任意）</label>
             <input
               type="text"
               value={code}
               onChange={(event) => setCode(event.target.value)}
-              placeholder="例: 512"
+              placeholder="未入力の場合は自動採番されます"
               style={{ padding: "0.6rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
-              required
             />
           </div>
 
