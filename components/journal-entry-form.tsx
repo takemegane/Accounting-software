@@ -328,11 +328,11 @@ export function JournalEntryForm() {
       style={{
         background: "white",
         borderRadius: "1rem",
-        padding: "2rem",
+        padding: "1.5rem",
         boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
       }}
     >
-      <h2 style={{ fontSize: "1.5rem", marginBottom: "1.5rem" }}>仕訳入力</h2>
+      <h2 style={{ fontSize: "1.25rem", margin: 0, marginBottom: "1rem" }}>仕訳入力</h2>
       {isEditing && (
         <div
           style={{
@@ -395,27 +395,29 @@ export function JournalEntryForm() {
         if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
           e.preventDefault();
         }
-      }} style={{ display: "grid", gap: "1.5rem" }}>
-        <div style={{ display: "grid", gap: "0.5rem" }}>
-          <label style={{ fontWeight: 600 }}>仕訳日</label>
-          <input
-            type="date"
-            value={entryDate}
-            onChange={(event) => setEntryDate(event.target.value)}
-            style={{ padding: "0.5rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
-            required
-          />
-        </div>
+      }} style={{ display: "grid", gap: "1rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <div style={{ display: "grid", gap: "0.35rem" }}>
+            <label style={{ fontWeight: 600, fontSize: "0.9rem" }}>仕訳日</label>
+            <input
+              type="date"
+              value={entryDate}
+              onChange={(event) => setEntryDate(event.target.value)}
+              style={{ padding: "0.5rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
+              required
+            />
+          </div>
 
-        <div style={{ display: "grid", gap: "0.5rem" }}>
-          <label style={{ fontWeight: 600 }}>摘要</label>
-          <input
-            type="text"
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            placeholder="摘要を入力"
-            style={{ padding: "0.5rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
-          />
+          <div style={{ display: "grid", gap: "0.35rem" }}>
+            <label style={{ fontWeight: 600, fontSize: "0.9rem" }}>摘要</label>
+            <input
+              type="text"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="摘要を入力"
+              style={{ padding: "0.5rem", borderRadius: "0.5rem", border: "1px solid #cbd5f5" }}
+            />
+          </div>
         </div>
 
         <div style={{ display: "grid", gap: "1rem" }}>
