@@ -2,7 +2,17 @@
 
 個人事業主向けの軽量会計アプリのプロトタイプです。CSV 取込と手入力を組み合わせた仕訳管理、帳簿・主要レポート（試算表 / 貸借対照表 / 損益計算書）の参照を想定しています。
 
-## ⚠️ 最新の重要な変更（2025-10-07）
+## ⚠️ 最新の重要な変更
+
+### 仕訳登録レスポンス改善と要確認一覧機能（2025-10-09）
+
+**Optimistic UI実装により、仕訳登録時のレスポンスを大幅に改善しました。**
+
+- **改善内容:** 仕訳登録ボタンを押すと即座にフォームがクリアされ、次の入力をすぐに開始できます
+- **新機能:** 登録に失敗した仕訳は「要確認一覧」タブに保存され、後で再入力できます
+- **詳細:** **[開発マニュアル.md](./開発マニュアル.md)** を参照してください
+
+### 消費税計算ロジックの修正（2025-10-07）
 
 **消費税計算ロジックの重大なバグを修正しました。**
 
@@ -15,6 +25,7 @@
 
 ## 主な機能
 - 仕訳 CRUD と取引一覧 (`app/transactions`, `components/journal-entry-form.tsx`, `components/transactions-table.tsx`)
+- **Optimistic UI による高速な仕訳入力と要確認一覧機能** (`components/failed-entries-*.tsx`)
 - 帳簿ページに総勘定元帳・仕訳帳を集約 (`app/books/page.tsx`)
 - 試算表・損益計算書・貸借対照表 UI (`components/*-report.tsx`)
 - CSV 取込（Papaparse）と税区分付き勘定科目初期データ (`lib/csv-import.ts`, `lib/seed.ts`)
@@ -86,9 +97,10 @@ Clerk を利用する場合は `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` と `CLERK_SE
 
 1. **README.md（本ファイル）** - プロジェクト概要と最新の重要な変更
 2. **[⚠️ docs/database-safety-guidelines.md](./docs/database-safety-guidelines.md)** - **必読**: データ損失を防ぐための重要なルール
-3. **[CHANGELOG.md](./CHANGELOG.md)** - 最新の修正内容と技術的詳細
-4. **[docs/operations-manual.md](./docs/operations-manual.md)** - 運用マニュアルと設計判断
-5. **[docs/accounting-roadmap.md](./docs/accounting-roadmap.md)** - 今後の開発予定
+3. **[開発マニュアル.md](./開発マニュアル.md)** - 最新機能（Optimistic UI・要確認一覧）の実装詳細
+4. **[CHANGELOG.md](./CHANGELOG.md)** - 最新の修正内容と技術的詳細
+5. **[docs/operations-manual.md](./docs/operations-manual.md)** - 運用マニュアルと設計判断
+6. **[docs/accounting-roadmap.md](./docs/accounting-roadmap.md)** - 今後の開発予定
 
 ### 特に重要
 - **⚠️ データベース操作時は必ず [docs/database-safety-guidelines.md](./docs/database-safety-guidelines.md) を確認してください**
