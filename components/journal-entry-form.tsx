@@ -262,7 +262,21 @@ export function JournalEntryForm() {
     setTaxPreview(preview);
   }, [accounts, taxPreference, lines, availableTaxCategories]);
 
+  // 全角数字を半角に変換する関数
+  const toHalfWidth = (str: string): string => {
+    return str.replace(/[０-９]/g, (char) => {
+      return String.fromCharCode(char.charCodeAt(0) - 0xFEE0);
+    });
+  };
+
   const updateLine = (index: number, updates: Partial<LineState>) => {
+    // 借方・貸方の金額を自動的に半角変換
+    if ('debit' in updates && updates.debit !== undefined) {
+      updates.debit = toHalfWidth(updates.debit);
+    }
+    if ('credit' in updates && updates.credit !== undefined) {
+      updates.credit = toHalfWidth(updates.credit);
+    }
     setLines((prev) => prev.map((line, i) => (i === index ? { ...line, ...updates } : line)));
   };
 
@@ -278,6 +292,11 @@ export function JournalEntryForm() {
   const creditTotal = lines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0);
   const taxTotalDebit = taxPreview.filter((item) => item.direction === "debit").reduce((sum, item) => sum + item.taxAmount, 0);
   const taxTotalCredit = taxPreview.filter((item) => item.direction === "credit").reduce((sum, item) => sum + item.taxAmount, 0);
+
+  // 借方と貸方の合計が一致しているかチェック
+  const finalDebitTotal = debitTotal + taxTotalDebit;
+  const finalCreditTotal = creditTotal + taxTotalCredit;
+  const isBalanced = finalDebitTotal === finalCreditTotal && finalDebitTotal > 0;
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -362,7 +381,12 @@ export function JournalEntryForm() {
           </ul>
         </div>
       )}
-      <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1.5rem" }}>
+      <form onSubmit={handleSubmit} onKeyDown={(e) => {
+        // Enterキーだけでの送信を防止（Ctrl+EnterやCmd+Enterは許可）
+        if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey) {
+          e.preventDefault();
+        }
+      }} style={{ display: "grid", gap: "1.5rem" }}>
         <div style={{ display: "grid", gap: "0.5rem" }}>
           <label style={{ fontWeight: 600 }}>仕訳日</label>
           <input
@@ -565,18 +589,34 @@ export function JournalEntryForm() {
         {error && <p style={{ color: "#ef4444" }}>{error}</p>}
         {message && <p style={{ color: "#16a34a" }}>{message}</p>}
 
+        {/* 借方貸方不一致時の警告メッセージ */}
+        {!isBalanced && (debitTotal > 0 || creditTotal > 0) && (
+          <div
+            style={{
+              background: "#fef3c7",
+              border: "1px solid #fbbf24",
+              borderRadius: "0.75rem",
+              padding: "0.75rem 1rem",
+              color: "#92400e",
+              fontSize: "0.9rem",
+            }}
+          >
+            ⚠️ 借方と貸方の合計が一致していません。仕訳を登録できません。
+          </div>
+        )}
+
         <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
           <button
             type="submit"
-            disabled={mutation.isPending}
+            disabled={mutation.isPending || !isBalanced}
             style={{
               padding: "0.75rem 1.5rem",
               borderRadius: "0.75rem",
-              backgroundColor: mutation.isPending ? "#9ca3af" : "#2563eb",
+              backgroundColor: mutation.isPending || !isBalanced ? "#9ca3af" : "#2563eb",
               color: "white",
               fontWeight: 600,
               border: "none",
-              cursor: mutation.isPending ? "not-allowed" : "pointer",
+              cursor: mutation.isPending || !isBalanced ? "not-allowed" : "pointer",
             }}
           >
             {mutation.isPending
