@@ -626,66 +626,6 @@ export function JournalEntryForm() {
         )}
 
         {error && <p style={{ color: "#ef4444", margin: 0 }}>{error}</p>}
-        {message && <p style={{ color: "#16a34a", margin: 0 }}>{message}</p>}
-
-        {/* 登録成功後のプレビュー */}
-        {message && lastSubmitted && (
-          <div
-            style={{
-              background: "#f0fdf4",
-              borderRadius: "0.75rem",
-              padding: "1rem",
-              border: "1px solid #86efac",
-              fontSize: "0.9rem",
-            }}
-          >
-            <p style={{ margin: 0, fontWeight: 600, marginBottom: "0.5rem", color: "#166534" }}>
-              登録した仕訳
-            </p>
-            <div style={{ color: "#15803d", marginBottom: "0.5rem" }}>
-              <div>日付: {new Date(lastSubmitted.date).toLocaleDateString("ja-JP")}</div>
-              {lastSubmitted.description && <div>摘要: {lastSubmitted.description}</div>}
-            </div>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid #86efac" }}>
-                  <th style={{ padding: "0.35rem", textAlign: "left", color: "#166534" }}>勘定科目</th>
-                  <th style={{ padding: "0.35rem", textAlign: "right", color: "#166534" }}>借方</th>
-                  <th style={{ padding: "0.35rem", textAlign: "right", color: "#166534" }}>貸方</th>
-                  <th style={{ padding: "0.35rem", textAlign: "left", color: "#166534" }}>メモ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lastSubmitted.lines.map((line, idx) => (
-                  <tr key={idx} style={{ borderBottom: "1px solid #bbf7d0" }}>
-                    <td style={{ padding: "0.35rem", color: "#15803d" }}>{line.accountName}</td>
-                    <td style={{ padding: "0.35rem", textAlign: "right", color: "#15803d" }}>
-                      {line.debit > 0 ? line.debit.toLocaleString() : ""}
-                    </td>
-                    <td style={{ padding: "0.35rem", textAlign: "right", color: "#15803d" }}>
-                      {line.credit > 0 ? line.credit.toLocaleString() : ""}
-                    </td>
-                    <td style={{ padding: "0.35rem", color: "#15803d" }}>{line.memo ?? ""}</td>
-                  </tr>
-                ))}
-                {lastSubmitted.taxLines.map((tax, idx) => (
-                  <tr key={`tax-${idx}`} style={{ borderBottom: "1px solid #bbf7d0" }}>
-                    <td style={{ padding: "0.35rem", color: "#15803d", fontStyle: "italic" }}>
-                      {tax.direction === "debit" ? "仮払消費税" : "仮受消費税"}
-                    </td>
-                    <td style={{ padding: "0.35rem", textAlign: "right", color: "#15803d" }}>
-                      {tax.direction === "debit" ? tax.taxAmount.toLocaleString() : ""}
-                    </td>
-                    <td style={{ padding: "0.35rem", textAlign: "right", color: "#15803d" }}>
-                      {tax.direction === "credit" ? tax.taxAmount.toLocaleString() : ""}
-                    </td>
-                    <td style={{ padding: "0.35rem", color: "#15803d" }}></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
 
         {/* 借方貸方不一致時の警告メッセージ */}
         {!isBalanced && (debitTotal > 0 || creditTotal > 0) && (
@@ -744,6 +684,68 @@ export function JournalEntryForm() {
             </button>
           )}
         </div>
+
+        {message && <p style={{ color: "#16a34a", margin: "1rem 0 0" }}>{message}</p>}
+
+        {/* 登録成功後のプレビュー */}
+        {message && lastSubmitted && (
+          <div
+            style={{
+              background: "#f0fdf4",
+              borderRadius: "0.75rem",
+              padding: "1rem",
+              border: "1px solid #86efac",
+              fontSize: "0.9rem",
+              marginTop: "1rem",
+            }}
+          >
+            <p style={{ margin: 0, fontWeight: 600, marginBottom: "0.5rem", color: "#166534" }}>
+              登録した仕訳
+            </p>
+            <div style={{ color: "#15803d", marginBottom: "0.5rem" }}>
+              <div>日付: {new Date(lastSubmitted.date).toLocaleDateString("ja-JP")}</div>
+              {lastSubmitted.description && <div>摘要: {lastSubmitted.description}</div>}
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid #86efac" }}>
+                  <th style={{ padding: "0.35rem", textAlign: "left", color: "#166534" }}>勘定科目</th>
+                  <th style={{ padding: "0.35rem", textAlign: "right", color: "#166534" }}>借方</th>
+                  <th style={{ padding: "0.35rem", textAlign: "right", color: "#166534" }}>貸方</th>
+                  <th style={{ padding: "0.35rem", textAlign: "left", color: "#166534" }}>メモ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lastSubmitted.lines.map((line, idx) => (
+                  <tr key={idx} style={{ borderBottom: "1px solid #bbf7d0" }}>
+                    <td style={{ padding: "0.35rem", color: "#15803d" }}>{line.accountName}</td>
+                    <td style={{ padding: "0.35rem", textAlign: "right", color: "#15803d" }}>
+                      {line.debit > 0 ? line.debit.toLocaleString() : ""}
+                    </td>
+                    <td style={{ padding: "0.35rem", textAlign: "right", color: "#15803d" }}>
+                      {line.credit > 0 ? line.credit.toLocaleString() : ""}
+                    </td>
+                    <td style={{ padding: "0.35rem", color: "#15803d" }}>{line.memo ?? ""}</td>
+                  </tr>
+                ))}
+                {lastSubmitted.taxLines.map((tax, idx) => (
+                  <tr key={`tax-${idx}`} style={{ borderBottom: "1px solid #bbf7d0" }}>
+                    <td style={{ padding: "0.35rem", color: "#15803d", fontStyle: "italic" }}>
+                      {tax.direction === "debit" ? "仮払消費税" : "仮受消費税"}
+                    </td>
+                    <td style={{ padding: "0.35rem", textAlign: "right", color: "#15803d" }}>
+                      {tax.direction === "debit" ? tax.taxAmount.toLocaleString() : ""}
+                    </td>
+                    <td style={{ padding: "0.35rem", textAlign: "right", color: "#15803d" }}>
+                      {tax.direction === "credit" ? tax.taxAmount.toLocaleString() : ""}
+                    </td>
+                    <td style={{ padding: "0.35rem", color: "#15803d" }}></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </form>
     </section>
   );
