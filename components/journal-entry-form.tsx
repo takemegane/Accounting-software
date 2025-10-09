@@ -207,8 +207,7 @@ export function JournalEntryForm() {
         cancelEditing();
         setEntryDate(getToday());
       }
-      // 仕訳一覧のみ自動更新（帳票は手動更新ボタンで更新）
-      queryClient.invalidateQueries({ queryKey: ["journal-entries"] });
+      // 仕訳一覧も手動更新ボタンで更新する方式に統一（高速化）
     },
     onError: (error) => {
       setError(error.message || "仕訳の保存に失敗しました");
