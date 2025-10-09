@@ -138,7 +138,7 @@ export function IncomeStatementReport() {
           <h2 style={{ fontSize: "1.4rem", marginBottom: "0.5rem" }}>損益計算書</h2>
           <p style={{ margin: 0, color: "#64748b" }}>売上・費用・純利益を月次および年初来で確認できます。</p>
         </div>
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ fontSize: "0.85rem", color: "#475569" }}>
             対象月
             <input
@@ -153,6 +153,21 @@ export function IncomeStatementReport() {
               }}
             />
           </label>
+          <button
+            onClick={() => query.refetch()}
+            disabled={query.isFetching}
+            style={{
+              padding: "0.55rem 1.1rem",
+              borderRadius: "0.65rem",
+              border: "1px solid #2563eb",
+              backgroundColor: query.isFetching ? "#9ca3af" : "#2563eb",
+              color: "white",
+              fontWeight: 600,
+              cursor: query.isFetching ? "not-allowed" : "pointer",
+            }}
+          >
+            {query.isFetching ? "更新中..." : "🔄 最新データに更新"}
+          </button>
           <a
             href={`/api/reports/income-statement/pdf?period=${period}`}
             style={{

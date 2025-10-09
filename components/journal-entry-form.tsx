@@ -207,10 +207,8 @@ export function JournalEntryForm() {
         cancelEditing();
         setEntryDate(getToday());
       }
-      queryClient.invalidateQueries({ queryKey: ["trial-balance"] });
+      // 仕訳一覧のみ自動更新（帳票は手動更新ボタンで更新）
       queryClient.invalidateQueries({ queryKey: ["journal-entries"] });
-      queryClient.invalidateQueries({ queryKey: ["general-ledger"] });
-      queryClient.invalidateQueries({ queryKey: ["journal-report"] });
     },
     onError: (error) => {
       setError(error.message || "仕訳の保存に失敗しました");

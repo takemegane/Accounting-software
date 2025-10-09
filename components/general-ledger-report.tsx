@@ -38,7 +38,7 @@ export function GeneralLedgerReport() {
   const [searchQuery, setSearchQuery] = useState("");
   const [amountFilter, setAmountFilter] = useState("");
 
-  const { data, isLoading, isError } = useQuery<GeneralLedgerAccount[]>({
+  const query = useQuery<GeneralLedgerAccount[]>({
     queryKey: ["general-ledger"],
     queryFn: async () => {
       const response = await fetch("/api/reports/general-ledger");
@@ -48,6 +48,8 @@ export function GeneralLedgerReport() {
       return response.json();
     },
   });
+
+  const { data, isLoading, isError } = query;
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -170,11 +172,28 @@ export function GeneralLedgerReport() {
         gap: "1.5rem",
       }}
     >
-      <div>
-        <h2 style={{ fontSize: "1.4rem", margin: 0 }}>総勘定元帳</h2>
-        <p style={{ margin: "0.35rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>
-          仕訳の明細を勘定科目別に確認できます。
-        </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+        <div>
+          <h2 style={{ fontSize: "1.4rem", margin: 0 }}>総勘定元帳</h2>
+          <p style={{ margin: "0.35rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>
+            仕訳の明細を勘定科目別に確認できます。
+          </p>
+        </div>
+        <button
+          onClick={() => query.refetch()}
+          disabled={query.isFetching}
+          style={{
+            padding: "0.55rem 1.1rem",
+            borderRadius: "0.65rem",
+            border: "1px solid #2563eb",
+            backgroundColor: query.isFetching ? "#9ca3af" : "#2563eb",
+            color: "white",
+            fontWeight: 600,
+            cursor: query.isFetching ? "not-allowed" : "pointer",
+          }}
+        >
+          {query.isFetching ? "更新中..." : "🔄 最新データに更新"}
+        </button>
       </div>
 
       <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "flex-end" }}>

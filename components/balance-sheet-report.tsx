@@ -72,7 +72,7 @@ function SectionTable({ title, section }: { title: string; section: BalanceSheet
 }
 
 export function BalanceSheetReport() {
-  const { data, isLoading, isError } = useQuery<BalanceSheetResponse>({
+  const query = useQuery<BalanceSheetResponse>({
     queryKey: ["balance-sheet"],
     queryFn: async () => {
       const response = await fetch("/api/reports/balance-sheet");
@@ -82,6 +82,8 @@ export function BalanceSheetReport() {
       return response.json();
     },
   });
+
+  const { data, isLoading, isError } = query;
 
   return (
     <section
@@ -94,9 +96,26 @@ export function BalanceSheetReport() {
         gap: "1.5rem",
       }}
     >
-      <div>
-        <h2 style={{ fontSize: "1.4rem", margin: 0 }}>貸借対照表 (Balance Sheet)</h2>
-        {data && <p style={{ margin: "0.35rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>{data.period} 時点</p>}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
+        <div>
+          <h2 style={{ fontSize: "1.4rem", margin: 0 }}>貸借対照表 (Balance Sheet)</h2>
+          {data && <p style={{ margin: "0.35rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>{data.period} 時点</p>}
+        </div>
+        <button
+          onClick={() => query.refetch()}
+          disabled={query.isFetching}
+          style={{
+            padding: "0.55rem 1.1rem",
+            borderRadius: "0.65rem",
+            border: "1px solid #2563eb",
+            backgroundColor: query.isFetching ? "#9ca3af" : "#2563eb",
+            color: "white",
+            fontWeight: 600,
+            cursor: query.isFetching ? "not-allowed" : "pointer",
+          }}
+        >
+          {query.isFetching ? "更新中..." : "🔄 最新データに更新"}
+        </button>
       </div>
 
       {isLoading && <p>読み込み中...</p>}
