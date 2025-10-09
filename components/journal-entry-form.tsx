@@ -298,15 +298,15 @@ export function JournalEntryForm() {
     setLines((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // 税抜経理モードでは、税込金額を入力するため、借方貸方の合計は入力金額のまま
   const debitTotal = lines.reduce((sum, line) => sum + (Number(line.debit) || 0), 0);
   const creditTotal = lines.reduce((sum, line) => sum + (Number(line.credit) || 0), 0);
   const taxTotalDebit = taxPreview.filter((item) => item.direction === "debit").reduce((sum, item) => sum + item.taxAmount, 0);
   const taxTotalCredit = taxPreview.filter((item) => item.direction === "credit").reduce((sum, item) => sum + item.taxAmount, 0);
 
   // 借方と貸方の合計が一致しているかチェック
-  const finalDebitTotal = debitTotal + taxTotalDebit;
-  const finalCreditTotal = creditTotal + taxTotalCredit;
-  const isBalanced = finalDebitTotal === finalCreditTotal && finalDebitTotal > 0;
+  // 税抜経理の場合: 入力金額そのものが税込なので、消費税行を追加しても合計は変わらない
+  const isBalanced = debitTotal === creditTotal && debitTotal > 0;
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
