@@ -67,6 +67,12 @@ export function JournalEntryForm() {
   const [taxPreview, setTaxPreview] = useState<TaxPreview[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lastSubmitted, setLastSubmitted] = useState<{
+    date: string;
+    description: string;
+    lines: { accountName: string; debit: number; credit: number; memo?: string }[];
+    taxLines: TaxPreview[];
+  } | null>(null);
   const { editingEntry, cancelEditing } = useJournalEntryEditor();
   const isEditing = Boolean(editingEntry);
 
@@ -206,6 +212,7 @@ export function JournalEntryForm() {
       if (variables.mode === "update") {
         cancelEditing();
         setEntryDate(getToday());
+        setLastSubmitted(null);
       }
       // 仕訳一覧も手動更新ボタンで更新する方式に統一（高速化）
     },
@@ -311,6 +318,27 @@ export function JournalEntryForm() {
     event.preventDefault();
     setMessage(null);
     setError(null);
+
+    // 登録前のデータを保存（プレビュー用）
+    const submittedLines = lines
+      .filter(line => line.accountId && (Number(line.debit) > 0 || Number(line.credit) > 0))
+      .map(line => {
+        const account = accounts?.find(a => a.id === line.accountId);
+        return {
+          accountName: account?.name ?? "",
+          debit: Number(line.debit) || 0,
+          credit: Number(line.credit) || 0,
+          memo: line.memo || undefined,
+        };
+      });
+
+    setLastSubmitted({
+      date: entryDate,
+      description: description,
+      lines: submittedLines,
+      taxLines: taxPreview,
+    });
+
     mutation.mutate({
       mode: isEditing ? "update" : "create",
       entryId: editingEntry?.id,
@@ -460,7 +488,7 @@ export function JournalEntryForm() {
                 <option value="">選択してください</option>
                 {accounts?.map((account) => (
                   <option key={account.id} value={account.id}>
-                    {account.code} {account.name}
+                    {account.name}
                   </option>
                 ))}
               </select>
@@ -597,8 +625,67 @@ export function JournalEntryForm() {
           </div>
         )}
 
-        {error && <p style={{ color: "#ef4444" }}>{error}</p>}
-        {message && <p style={{ color: "#16a34a" }}>{message}</p>}
+        {error && <p style={{ color: "#ef4444", margin: 0 }}>{error}</p>}
+        {message && <p style={{ color: "#16a34a", margin: 0 }}>{message}</p>}
+
+        {/* 登録成功後のプレビュー */}
+        {message && lastSubmitted && (
+          <div
+            style={{
+              background: "#f0fdf4",
+              borderRadius: "0.75rem",
+              padding: "1rem",
+              border: "1px solid #86efac",
+              fontSize: "0.9rem",
+            }}
+          >
+            <p style={{ margin: 0, fontWeight: 600, marginBottom: "0.5rem", color: "#166534" }}>
+              登録した仕訳
+            </p>
+            <div style={{ color: "#15803d", marginBottom: "0.5rem" }}>
+              <div>日付: {new Date(lastSubmitted.date).toLocaleDateString("ja-JP")}</div>
+              {lastSubmitted.description && <div>摘要: {lastSubmitted.description}</div>}
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid #86efac" }}>
+                  <th style={{ padding: "0.35rem", textAlign: "left", color: "#166534" }}>勘定科目</th>
+                  <th style={{ padding: "0.35rem", textAlign: "right", color: "#166534" }}>借方</th>
+                  <th style={{ padding: "0.35rem", textAlign: "right", color: "#166534" }}>貸方</th>
+                  <th style={{ padding: "0.35rem", textAlign: "left", color: "#166534" }}>メモ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lastSubmitted.lines.map((line, idx) => (
+                  <tr key={idx} style={{ borderBottom: "1px solid #bbf7d0" }}>
+                    <td style={{ padding: "0.35rem", color: "#15803d" }}>{line.accountName}</td>
+                    <td style={{ padding: "0.35rem", textAlign: "right", color: "#15803d" }}>
+                      {line.debit > 0 ? line.debit.toLocaleString() : ""}
+                    </td>
+                    <td style={{ padding: "0.35rem", textAlign: "right", color: "#15803d" }}>
+                      {line.credit > 0 ? line.credit.toLocaleString() : ""}
+                    </td>
+                    <td style={{ padding: "0.35rem", color: "#15803d" }}>{line.memo ?? ""}</td>
+                  </tr>
+                ))}
+                {lastSubmitted.taxLines.map((tax, idx) => (
+                  <tr key={`tax-${idx}`} style={{ borderBottom: "1px solid #bbf7d0" }}>
+                    <td style={{ padding: "0.35rem", color: "#15803d", fontStyle: "italic" }}>
+                      {tax.direction === "debit" ? "仮払消費税" : "仮受消費税"}
+                    </td>
+                    <td style={{ padding: "0.35rem", textAlign: "right", color: "#15803d" }}>
+                      {tax.direction === "debit" ? tax.taxAmount.toLocaleString() : ""}
+                    </td>
+                    <td style={{ padding: "0.35rem", textAlign: "right", color: "#15803d" }}>
+                      {tax.direction === "credit" ? tax.taxAmount.toLocaleString() : ""}
+                    </td>
+                    <td style={{ padding: "0.35rem", color: "#15803d" }}></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* 借方貸方不一致時の警告メッセージ */}
         {!isBalanced && (debitTotal > 0 || creditTotal > 0) && (
