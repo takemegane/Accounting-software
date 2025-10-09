@@ -242,18 +242,28 @@ export function JournalEntryForm() {
       const credit = Number(line.credit) || 0;
 
       if (debit > 0 && credit === 0) {
+        // 税込金額から消費税を逆算（サーバー側と同じロジック）
+        const taxInclusiveAmount = debit;
+        const taxExclusiveAmount = Math.round(taxInclusiveAmount / (1 + rate));
+        const taxAmount = taxInclusiveAmount - taxExclusiveAmount;
+
         preview.push({
           accountName: account.name,
-          taxAmount: Math.round(debit * rate),
+          taxAmount: taxAmount,
           direction: "debit",
           taxCategoryCode: selectedTaxCategory?.code ?? account.taxCategoryCode,
         });
       }
 
       if (credit > 0 && debit === 0) {
+        // 税込金額から消費税を逆算（サーバー側と同じロジック）
+        const taxInclusiveAmount = credit;
+        const taxExclusiveAmount = Math.round(taxInclusiveAmount / (1 + rate));
+        const taxAmount = taxInclusiveAmount - taxExclusiveAmount;
+
         preview.push({
           accountName: account.name,
-          taxAmount: Math.round(credit * rate),
+          taxAmount: taxAmount,
           direction: "credit",
           taxCategoryCode: selectedTaxCategory?.code ?? account.taxCategoryCode,
         });
