@@ -10,12 +10,13 @@ import { JournalEntryEditorProvider, useJournalEntryEditor } from "@/components/
 import { FailedEntriesProvider } from "@/components/failed-entries-context";
 import { FailedEntriesList } from "@/components/failed-entries-list";
 
-type Tab = "entry" | "list" | "import";
+type Tab = "entry" | "list" | "import" | "failed";
 
 const tabs: { id: Tab; label: string }[] = [
   { id: "entry", label: "仕訳入力" },
   { id: "import", label: "CSVインポート" },
   { id: "list", label: "仕訳一覧" },
+  { id: "failed", label: "要確認一覧" },
 ];
 
 function TransactionsContent() {
@@ -127,12 +128,9 @@ function TransactionsContent() {
         </>
       )}
 
-      {activeTab === "list" && (
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "1.5rem" }}>
-          <TransactionsTable />
-          <FailedEntriesList />
-        </div>
-      )}
+      {activeTab === "list" && <TransactionsTable />}
+
+      {activeTab === "failed" && <FailedEntriesList />}
     </>
   );
 }
