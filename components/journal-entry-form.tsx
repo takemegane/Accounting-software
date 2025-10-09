@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useJournalEntryEditor } from "@/components/journal-entry-editor-context";
+import { useFailedEntries } from "@/components/failed-entries-context";
 
 type Account = {
   id: string;
@@ -48,6 +49,7 @@ const fallbackTaxCategoryLabel: Record<string, string> = {
 
 export function JournalEntryForm() {
   const queryClient = useQueryClient();
+  const { addFailedEntry } = useFailedEntries();
   const [entryDate, setEntryDate] = useState(getToday);
   const [description, setDescription] = useState("");
   const { data: businessResponse } = useQuery<{ activeBusiness: { taxPreference: string } }>({
@@ -313,12 +315,56 @@ export function JournalEntryForm() {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    setMessage(null);
+
+    // 編集モードの場合は従来通りの動作（楽観的UIを使わない）
+    if (isEditing) {
+      setMessage(null);
+      setError(null);
+      mutation.mutate({
+        mode: "update",
+        entryId: editingEntry?.id,
+      });
+      return;
+    }
+
+    // 新規登録の場合は楽観的UI
+    // 入力内容を保存（エラー時の要確認一覧用）
+    const savedEntry = {
+      date: entryDate,
+      description: description,
+      lines: [...lines],
+    };
+
+    // すぐにフォームをクリア（次の入力が可能に）
+    setDescription("");
+    setLines(createInitialLines());
+    setTaxPreview([]);
+    setMessage("登録中...");
     setError(null);
-    mutation.mutate({
-      mode: isEditing ? "update" : "create",
-      entryId: editingEntry?.id,
-    });
+
+    mutation.mutate(
+      { mode: "create" },
+      {
+        onSuccess: () => {
+          setMessage("仕訳を登録しました");
+          // 3秒後にメッセージを消す
+          setTimeout(() => setMessage(null), 3000);
+        },
+        onError: (error) => {
+          // 失敗した仕訳を要確認一覧に追加
+          addFailedEntry({
+            date: savedEntry.date,
+            description: savedEntry.description,
+            lines: savedEntry.lines,
+            error: error.message || "仕訳の登録に失敗しました",
+          });
+          setMessage(null);
+          setError("仕訳の登録に失敗しました。要確認一覧をご確認ください。");
+          // 5秒後にエラーメッセージを消す
+          setTimeout(() => setError(null), 5000);
+        },
+      }
+    );
   };
 
   const handleCancelEditing = () => {

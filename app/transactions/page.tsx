@@ -7,6 +7,8 @@ import { TransactionsTable } from "@/components/transactions-table";
 import { CsvImporter } from "@/components/csv-importer";
 import { ImportedTransactions } from "@/components/imported-transactions";
 import { JournalEntryEditorProvider, useJournalEntryEditor } from "@/components/journal-entry-editor-context";
+import { FailedEntriesProvider } from "@/components/failed-entries-context";
+import { FailedEntriesList } from "@/components/failed-entries-list";
 
 type Tab = "entry" | "list" | "import";
 
@@ -125,7 +127,12 @@ function TransactionsContent() {
         </>
       )}
 
-      {activeTab === "list" && <TransactionsTable />}
+      {activeTab === "list" && (
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "1.5rem" }}>
+          <TransactionsTable />
+          <FailedEntriesList />
+        </div>
+      )}
     </>
   );
 }
@@ -136,9 +143,11 @@ export default function TransactionsPage() {
       title="取引"
       description="仕訳の登録や取引明細の管理を行います。"
     >
-      <JournalEntryEditorProvider>
-        <TransactionsContent />
-      </JournalEntryEditorProvider>
+      <FailedEntriesProvider>
+        <JournalEntryEditorProvider>
+          <TransactionsContent />
+        </JournalEntryEditorProvider>
+      </FailedEntriesProvider>
     </AppShell>
   );
 }
