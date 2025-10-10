@@ -18,6 +18,17 @@ function BooksContent() {
   const { editingEntry } = useJournalEntryEditor();
   const [activeTab, setActiveTab] = useState<Tab>("general-ledger");
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "general-ledger":
+        return <GeneralLedgerReport />;
+      case "journal":
+        return <JournalReport />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       {editingEntry && (
@@ -70,30 +81,38 @@ function BooksContent() {
         </div>
       )}
 
-      <div
+      <section
         style={{
           background: "white",
           borderRadius: "1rem",
-          padding: "1rem 2rem",
           boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
-          marginBottom: "1.5rem",
+          display: "grid",
+          gridTemplateRows: "auto 1fr",
         }}
       >
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", borderBottom: "1px solid #e5e7eb" }}>
+        <div
+          style={{
+            padding: "0.5rem 1.5rem 0",
+            borderBottom: "1px solid #e5e7eb",
+            display: "flex",
+            gap: "0.35rem",
+            flexWrap: "wrap",
+          }}
+        >
           {tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
               style={{
-                padding: "0.75rem 1.5rem",
+                padding: "0.5rem 1.1rem",
                 background: "none",
                 border: "none",
                 borderBottom: activeTab === tab.id ? "2px solid #2563eb" : "2px solid transparent",
                 color: activeTab === tab.id ? "#2563eb" : "#64748b",
                 fontWeight: activeTab === tab.id ? 600 : 500,
                 cursor: "pointer",
-                fontSize: "0.95rem",
+                fontSize: "0.9rem",
                 transition: "all 0.2s ease",
               }}
             >
@@ -101,10 +120,18 @@ function BooksContent() {
             </button>
           ))}
         </div>
-      </div>
 
-      {activeTab === "general-ledger" && <GeneralLedgerReport />}
-      {activeTab === "journal" && <JournalReport />}
+        <div
+          style={{
+            padding: "1.5rem",
+            display: "grid",
+            gap: "1.5rem",
+            alignContent: "start",
+          }}
+        >
+          {renderTabContent()}
+        </div>
+      </section>
     </>
   );
 }

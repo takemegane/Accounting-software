@@ -91,8 +91,8 @@ export function TaxCategoryManager() {
   return (
     <div style={{ display: "grid", gap: "1.5rem" }}>
       <div>
-        <h2 style={{ fontSize: "1.25rem", margin: 0 }}>税区分・税率管理</h2>
-        <p style={{ margin: "0.5rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>
+        <h2 style={{ fontSize: "1.25rem", margin: 0, marginBottom: "0.5rem" }}>税区分・税率管理</h2>
+        <p style={{ margin: 0, color: "#64748b", fontSize: "0.95rem" }}>
           消費税率を変更できます。変更は新規作成する仕訳に適用されます。
         </p>
       </div>

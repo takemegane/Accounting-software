@@ -120,7 +120,7 @@ export function ClosingPeriodManager() {
       style={{
         background: "white",
         borderRadius: "1rem",
-        padding: "2rem",
+        padding: "1.5rem",
         boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
         display: "flex",
         flexDirection: "column",
@@ -128,7 +128,7 @@ export function ClosingPeriodManager() {
       }}
     >
       <div>
-        <h2 style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}>期間締め</h2>
+        <h2 style={{ fontSize: "1.25rem", margin: 0, marginBottom: "0.5rem" }}>期間締め</h2>
         <p style={{ margin: 0, color: "#475569" }}>
           月次・年次の締めを行うと該当期間の仕訳がロックされます。
         </p>

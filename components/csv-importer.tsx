@@ -60,7 +60,7 @@ export function CsvImporter() {
       style={{
         background: "white",
         borderRadius: "1rem",
-        padding: "2rem",
+        padding: "1.5rem",
         boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
         display: "grid",
         gap: "1.5rem",
@@ -69,7 +69,7 @@ export function CsvImporter() {
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
           <div>
-            <h2 style={{ fontSize: "1.4rem", marginBottom: "0.5rem" }}>CSVインポート</h2>
+            <h2 style={{ fontSize: "1.25rem", margin: 0, marginBottom: "0.5rem" }}>CSVインポート</h2>
             <p style={{ margin: 0, color: "#64748b", lineHeight: 1.6 }}>
               銀行やクレジットカードの明細CSVを取り込み、仕訳作成前の取引候補として保存します。
             </p>

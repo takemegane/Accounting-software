@@ -90,7 +90,7 @@ export function BalanceSheetReport() {
       style={{
         background: "white",
         borderRadius: "1rem",
-        padding: "2rem",
+        padding: "1.5rem",
         boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
         display: "grid",
         gap: "1.5rem",
@@ -98,8 +98,8 @@ export function BalanceSheetReport() {
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h2 style={{ fontSize: "1.4rem", margin: 0 }}>貸借対照表 (Balance Sheet)</h2>
-          {data && <p style={{ margin: "0.35rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>{data.period} 時点</p>}
+          <h2 style={{ fontSize: "1.25rem", margin: 0, marginBottom: "0.5rem" }}>貸借対照表 (Balance Sheet)</h2>
+          {data && <p style={{ margin: 0, color: "#64748b", fontSize: "0.95rem" }}>{data.period} 時点</p>}
         </div>
         <button
           onClick={() => query.refetch()}

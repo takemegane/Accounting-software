@@ -55,7 +55,7 @@ export function TrialBalanceReport() {
       style={{
         background: "white",
         borderRadius: "1rem",
-        padding: "2rem",
+        padding: "1.5rem",
         boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
         display: "grid",
         gap: "1.5rem",
@@ -63,8 +63,8 @@ export function TrialBalanceReport() {
     >
       <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h2 style={{ fontSize: "1.4rem", marginBottom: "0.5rem" }}>試算表</h2>
-          <p style={{ margin: 0, color: "#64748b" }}>月次の借方・貸方残高を確認できます。</p>
+          <h2 style={{ fontSize: "1.25rem", margin: 0, marginBottom: "0.5rem" }}>試算表</h2>
+          <p style={{ margin: 0, color: "#64748b", fontSize: "0.95rem" }}>月次の借方・貸方残高を確認できます。</p>
         </div>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ fontSize: "0.85rem", color: "#475569" }}>

@@ -382,7 +382,12 @@ export function JournalEntryForm() {
         boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
       }}
     >
-      <h2 style={{ fontSize: "1.25rem", margin: 0, marginBottom: "1rem" }}>仕訳入力</h2>
+      <header style={{ marginBottom: "0.5rem" }}>
+        <h2 style={{ fontSize: "1.25rem", margin: 0 }}>仕訳入力</h2>
+        <p style={{ margin: "0.25rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>
+          仕訳を1件ずつ登録できます。必要な項目を入力し、下部のボタンから登録してください。
+        </p>
+      </header>
       {isEditing && (
         <div
           style={{

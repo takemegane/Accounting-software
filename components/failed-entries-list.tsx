@@ -54,7 +54,12 @@ export function FailedEntriesList() {
           boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
         }}
       >
-        <h2 style={{ fontSize: "1.25rem", margin: 0, marginBottom: "1rem" }}>要確認一覧</h2>
+        <header style={{ marginBottom: "0.5rem" }}>
+          <h2 style={{ fontSize: "1.25rem", margin: 0 }}>要確認一覧</h2>
+          <p style={{ margin: "0.25rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>
+            エラーになった仕訳がここに並びます。内容を確認して再登録してください。
+          </p>
+        </header>
         <p style={{ margin: 0, color: "#64748b" }}>登録に失敗した仕訳はありません。</p>
       </section>
     );
@@ -71,23 +76,13 @@ export function FailedEntriesList() {
         gap: "1rem",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h2 style={{ fontSize: "1.25rem", margin: 0 }}>
-          要確認一覧
-          <span
-            style={{
-              marginLeft: "0.5rem",
-              background: "#fee2e2",
-              color: "#991b1b",
-              padding: "0.2rem 0.6rem",
-              borderRadius: "999px",
-              fontSize: "0.85rem",
-              fontWeight: 600,
-            }}
-          >
-            {failedEntries.length}件
-          </span>
-        </h2>
+      <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+        <div>
+          <h2 style={{ fontSize: "1.25rem", margin: 0 }}>要確認一覧</h2>
+          <p style={{ margin: "0.25rem 0 0", color: "#64748b", fontSize: "0.9rem" }}>
+            仕訳登録に失敗したデータがここに溜まります。内容を確認して再登録してください。
+          </p>
+        </div>
         {failedEntries.length > 0 && (
           <button
             type="button"
@@ -106,7 +101,21 @@ export function FailedEntriesList() {
             全て削除
           </button>
         )}
-      </div>
+      </header>
+      <span
+        style={{
+          marginBottom: "0.5rem",
+          background: "#fee2e2",
+          color: "#991b1b",
+          padding: "0.2rem 0.6rem",
+          borderRadius: "999px",
+          fontSize: "0.85rem",
+          fontWeight: 600,
+          alignSelf: "flex-start",
+        }}
+      >
+        {failedEntries.length}件
+      </span>
 
       <div style={{ display: "grid", gap: "1rem" }}>
         {failedEntries.map((entry) => (

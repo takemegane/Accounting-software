@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { AppShell } from "@/components/app-shell";
 import { JournalEntryForm } from "@/components/journal-entry-form";
 import { TransactionsTable } from "@/components/transactions-table";
@@ -22,43 +23,14 @@ const tabs: { id: Tab; label: string }[] = [
 function TransactionsContent() {
   const { editingEntry } = useJournalEntryEditor();
   const [activeTab, setActiveTab] = useState<Tab>("entry");
+  const [isClient, setIsClient] = useState(false);
 
-  return (
-    <>
-      <div
-        style={{
-          background: "white",
-          borderRadius: "1rem",
-          padding: "1rem 2rem",
-          boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
-          marginBottom: "1.5rem",
-        }}
-      >
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", borderBottom: "1px solid #e5e7eb" }}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                padding: "0.75rem 1.5rem",
-                background: "none",
-                border: "none",
-                borderBottom: activeTab === tab.id ? "2px solid #2563eb" : "2px solid transparent",
-                color: activeTab === tab.id ? "#2563eb" : "#64748b",
-                fontWeight: activeTab === tab.id ? 600 : 500,
-                cursor: "pointer",
-                fontSize: "0.95rem",
-                transition: "all 0.2s ease",
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-      {editingEntry && (
+  const editingModal = editingEntry && isClient
+    ? createPortal(
         <div
           style={{
             position: "fixed",
@@ -105,32 +77,74 @@ function TransactionsContent() {
             </div>
             <JournalEntryForm />
           </div>
-        </div>
-      )}
+        </div>,
+        document.body
+      )
+    : null;
 
-      {activeTab === "entry" && (
-        <section
+  return (
+    <>
+      {editingModal}
+      <section
+        style={{
+          background: "white",
+          borderRadius: "1rem",
+          boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
+          display: "grid",
+          gridTemplateRows: "auto 1fr",
+        }}
+      >
+        <div
+          data-testid="transactions-tab-header"
           style={{
-            background: "white",
-            borderRadius: "1rem",
-            padding: "2rem",
-            boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
+            padding: "0.5rem 1.5rem 0",
+            borderBottom: "1px solid #e5e7eb",
+            display: "flex",
+            gap: "0.35rem",
+            flexWrap: "wrap",
           }}
         >
-          <JournalEntryForm />
-        </section>
-      )}
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                padding: "0.5rem 1.1rem",
+                background: "none",
+                border: "none",
+                borderBottom: activeTab === tab.id ? "2px solid #2563eb" : "2px solid transparent",
+                color: activeTab === tab.id ? "#2563eb" : "#64748b",
+                fontWeight: activeTab === tab.id ? 600 : 500,
+                cursor: "pointer",
+                fontSize: "0.9rem",
+                transition: "all 0.2s ease",
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-      {activeTab === "import" && (
-        <>
-          <CsvImporter />
-          <ImportedTransactions />
-        </>
-      )}
-
-      {activeTab === "list" && <TransactionsTable />}
-
-      {activeTab === "failed" && <FailedEntriesList />}
+        <div
+          style={{
+            padding: "1.5rem",
+            display: "grid",
+            gap: "1.5rem",
+            alignContent: "start",
+          }}
+        >
+          {activeTab === "entry" && <JournalEntryForm />}
+          {activeTab === "import" && (
+            <>
+              <CsvImporter />
+              <ImportedTransactions />
+            </>
+          )}
+          {activeTab === "list" && <TransactionsTable />}
+          {activeTab === "failed" && <FailedEntriesList />}
+        </div>
+      </section>
     </>
   );
 }

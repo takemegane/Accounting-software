@@ -330,11 +330,11 @@ export function AccountManager() {
         style={{
           background: "white",
           borderRadius: "1rem",
-          padding: "2rem",
+          padding: "1.5rem",
           boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
         }}
       >
-        <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>勘定科目を追加</h2>
+        <h2 style={{ fontSize: "1.25rem", margin: 0, marginBottom: "0.5rem" }}>勘定科目を追加</h2>
         <p style={{ margin: 0, color: "#64748b", lineHeight: 1.6 }}>
           コードは未入力の場合、区分ごとに自動採番されます。登録後は試算表やレポートに即時反映されます。
         </p>
@@ -597,11 +597,11 @@ export function AccountManager() {
         style={{
           background: "white",
           borderRadius: "1rem",
-          padding: "2rem",
+          padding: "1.5rem",
           boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
         }}
       >
-        <h2 style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>登録済み勘定科目</h2>
+        <h2 style={{ fontSize: "1.25rem", margin: 0, marginBottom: "0.5rem" }}>登録済み勘定科目</h2>
         {tableMessage && <p style={{ color: "#16a34a", margin: "0 0 1rem" }}>{tableMessage}</p>}
         {tableError && <p style={{ color: "#ef4444", margin: "0 0 1rem" }}>{tableError}</p>}
         {isLoading && <p>読み込み中...</p>}

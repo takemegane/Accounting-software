@@ -127,7 +127,7 @@ export function IncomeStatementReport() {
       style={{
         background: "white",
         borderRadius: "1rem",
-        padding: "2rem",
+        padding: "1.5rem",
         boxShadow: "0 10px 40px rgba(15, 23, 42, 0.06)",
         display: "grid",
         gap: "1.5rem",
@@ -135,8 +135,8 @@ export function IncomeStatementReport() {
     >
       <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h2 style={{ fontSize: "1.4rem", marginBottom: "0.5rem" }}>損益計算書</h2>
-          <p style={{ margin: 0, color: "#64748b" }}>売上・費用・純利益を月次および年初来で確認できます。</p>
+          <h2 style={{ fontSize: "1.25rem", margin: 0, marginBottom: "0.5rem" }}>損益計算書</h2>
+          <p style={{ margin: 0, color: "#64748b", fontSize: "0.95rem" }}>売上・費用・純利益を月次および年初来で確認できます。</p>
         </div>
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexWrap: "wrap" }}>
           <label style={{ fontSize: "0.85rem", color: "#475569" }}>

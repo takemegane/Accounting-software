@@ -136,7 +136,7 @@ export function BusinessSettings() {
       <div style={{ display: "grid", gap: "0.75rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
-            <h2 style={{ fontSize: "1.25rem", marginBottom: "0.25rem" }}>事業の切り替え</h2>
+            <h2 style={{ fontSize: "1.25rem", margin: 0, marginBottom: "0.5rem" }}>事業の切り替え</h2>
             <p style={{ margin: 0, color: "#64748b" }}>複数事業を管理している場合はここから切り替えできます。</p>
           </div>
           <select
@@ -200,7 +200,7 @@ export function BusinessSettings() {
       </div>
 
       <div>
-        <h2 style={{ fontSize: "1.25rem", marginBottom: "0.5rem" }}>{activeBusiness.name}</h2>
+        <h2 style={{ fontSize: "1.25rem", margin: 0, marginBottom: "0.5rem" }}>{activeBusiness.name}</h2>
         <p style={{ margin: 0, color: "#64748b" }}>経理方式や消費税設定を変更できます。</p>
       </div>
 
