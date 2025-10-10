@@ -35,8 +35,16 @@ export async function prepareJournalEntryData(
   payload: JournalEntryInput,
   business: BusinessContext
 ) {
-  if (!payload.entryDate || !Array.isArray(payload.lines) || payload.lines.length < 2) {
-    throw new JournalEntryValidationError("無効な仕訳データです");
+  if (!payload.entryDate) {
+    throw new JournalEntryValidationError("仕訳日が入力されていません");
+  }
+
+  if (!Array.isArray(payload.lines)) {
+    throw new JournalEntryValidationError("仕訳明細が正しい形式ではありません");
+  }
+
+  if (payload.lines.length < 2) {
+    throw new JournalEntryValidationError(`仕訳は最低2行必要です（現在${payload.lines.length}行）`);
   }
 
   const parsedDate = new Date(payload.entryDate);

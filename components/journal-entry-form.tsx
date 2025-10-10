@@ -164,22 +164,30 @@ export function JournalEntryForm() {
   const buildPayload = () => ({
     entryDate,
     description: description || undefined,
-    lines: lines.map((line) => ({
-      accountId: line.accountId,
-      debit: Math.round(Number(line.debit) || 0),
-      credit: Math.round(Number(line.credit) || 0),
-      memo: line.memo || undefined,
-      taxCategoryId: line.taxCategoryId || undefined,
-    })),
+    lines: lines
+      .filter((line) => {
+        // 空の行をフィルタリング: accountIdが空、または借方・貸方が両方0の行は除外
+        const hasAccount = line.accountId && line.accountId.trim() !== "";
+        const hasAmount = (Number(line.debit) || 0) > 0 || (Number(line.credit) || 0) > 0;
+        return hasAccount && hasAmount;
+      })
+      .map((line) => ({
+        accountId: line.accountId,
+        debit: Math.round(Number(line.debit) || 0),
+        credit: Math.round(Number(line.credit) || 0),
+        memo: line.memo || undefined,
+        taxCategoryId: line.taxCategoryId || undefined,
+      })),
   });
 
   const mutation = useMutation<
     unknown,
     Error,
-    { mode: "create" | "update"; entryId?: string }
+    { mode: "create" | "update"; entryId?: string; payload?: ReturnType<typeof buildPayload> }
   >({
-    mutationFn: async ({ mode, entryId }) => {
-      const payload = buildPayload();
+    mutationFn: async ({ mode, entryId, payload: providedPayload }) => {
+      // 新規作成時はペイロードが渡される、更新時は現在のフォームから作成
+      const payload = providedPayload ?? buildPayload();
       const url = mode === "create" ? "/api/journal-entries" : `/api/journal-entries/${entryId}`;
       const method = mode === "create" ? "POST" : "PATCH";
 
@@ -198,23 +206,7 @@ export function JournalEntryForm() {
 
       return response.json();
     },
-    onSuccess: (_data, variables) => {
-      const successMessage = variables.mode === "create" ? "仕訳を登録しました" : "仕訳を更新しました";
-      setMessage(successMessage);
-      setError(null);
-      setDescription("");
-      setLines(createInitialLines());
-      setTaxPreview([]);
-      if (variables.mode === "update") {
-        cancelEditing();
-        setEntryDate(getToday());
-      }
-      // 仕訳一覧も手動更新ボタンで更新する方式に統一（高速化）
-    },
-    onError: (error) => {
-      setError(error.message || "仕訳の保存に失敗しました");
-      setMessage(null);
-    },
+    // グローバルなonSuccessとonErrorは削除（個別のコールバックで処理）
   });
 
   useEffect(() => {
@@ -320,20 +312,42 @@ export function JournalEntryForm() {
     if (isEditing) {
       setMessage(null);
       setError(null);
-      mutation.mutate({
-        mode: "update",
-        entryId: editingEntry?.id,
-      });
+      mutation.mutate(
+        {
+          mode: "update",
+          entryId: editingEntry?.id,
+        },
+        {
+          onSuccess: () => {
+            setMessage("仕訳を更新しました");
+            setError(null);
+            setDescription("");
+            setLines(createInitialLines());
+            setTaxPreview([]);
+            cancelEditing();
+            setEntryDate(getToday());
+            // 3秒後にメッセージを消す
+            setTimeout(() => setMessage(null), 3000);
+          },
+          onError: (error) => {
+            setError(error.message || "仕訳の更新に失敗しました");
+            setMessage(null);
+          },
+        }
+      );
       return;
     }
 
     // 新規登録の場合は楽観的UI
-    // 入力内容を保存（エラー時の要確認一覧用）
+    // 入力内容を保存（フォームクリア前にペイロード作成）
     const savedEntry = {
       date: entryDate,
       description: description,
       lines: [...lines],
     };
+
+    // ペイロードを事前に作成（フォームクリア前に）
+    const payload = buildPayload();
 
     // すぐにフォームをクリア（次の入力が可能に）
     setDescription("");
@@ -342,8 +356,9 @@ export function JournalEntryForm() {
     setMessage("登録中...");
     setError(null);
 
+    // ペイロードを渡してmutation実行
     mutation.mutate(
-      { mode: "create" },
+      { mode: "create", payload },
       {
         onSuccess: () => {
           setMessage("仕訳を登録しました");
